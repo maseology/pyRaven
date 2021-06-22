@@ -19,28 +19,14 @@ def write(root, nam, desc, builder, ver):
 
 
         f.write('# global parameters:\n')
-        f.write(':GlobalParameter RAINSNOW_TEMP     0.0\n')
-        f.write(':GlobalParameter RAINSNOW_DELTA    1.1559\n')
         f.write(':GlobalParameter SNOW_SWI          0.05\n')
-        f.write(':GlobalParameter AVG_ANNUAL_RUNOFF 350 # mm\n')
-        # :GlobalParameter AIRSNOW_COEFF   0.75 #(1-x6)
-        # :GlobalParameter AVG_ANNUAL_SNOW 123.3 #x5 mm
-        # :GlobalParameter PRECIP_LAPSE    0.4
-        # :GlobalParameter ADIABATIC_LAPSE 6.5
 
 
         f.write('\n# class parameters:\n')
 
 
         f.write(':LandUseParameterList\n')
-        f.write(' :Parameters             MELT_FACTOR  MIN_MELT_FACTOR  HBV_MELT_FOR_CORR  REFREEZE_FACTOR  HBV_MELT_ASP_CORR\n')
-        f.write(' :Units                       mm/d/K          mm/d/K                none           mm/d/K               none\n') 
-        f.write('  [DEFAULT]                   3.1339          1.3036                 1.0              1.0            0.65836\n')
+        f.write(' :Parameters             MELT_FACTOR  REFREEZE_FACTOR\n')
+        f.write(' :Units                       mm/d/K           mm/d/K\n') 
+        f.write('  [DEFAULT]                   3.1339              1.0\n')
         f.write(':EndLandUseParameterList\n\n')
-
-
-        f.write(':VegetationParameterList\n')
-        f.write(' :Parameters            SAI_HT_RATIO  MAX_CAPACITY  MAX_SNOW_CAPACITY  RAIN_ICEPT_FACT  SNOW_ICEPT_FACT  RAIN_ICEPT_PCT  SNOW_ICEPT_PCT\n')
-        f.write(' :Units                         none            mm                 mm             none             none            none            none\n')
-        f.write('  [DEFAULT]                      0.0           5.0                5.0             0.05             0.05            0.05            0.05\n')
-        f.write(':EndVegetationParameterList\n\n')

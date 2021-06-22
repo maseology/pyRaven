@@ -41,11 +41,11 @@ def BasinMelt(fp):
 
     # load data
     print("\n\n=== Loading data..")
-    met = Met(ins.params['met'], skipdata = not writemetfiles)
-    if writemetfiles: met.dftem = np.transpose(met.dftem, (1, 0, 2)) # re-order array axes               
     hdem = HDEM(ins.params['hdem'], True)
     wshd = Watershed(ins.params['wshd'], hdem)
-
+    # met = Met(ins.params['met'], skipdata = not writemetfiles)
+    # if writemetfiles: met.dftem = np.transpose(met.dftem, (1, 0, 2)) # re-order array axes               
+    met = Met()
 
     # make directories   
     mmio.mkDir(root)
@@ -53,10 +53,10 @@ def BasinMelt(fp):
 
 
     print("\n\n=== Writing data..")
+    bsm_rvt.write(root, nam, desc, builder, ver, met, wshd, writemetfiles=writemetfiles) # temporal
     bsm_rvi.write(root, nam, builder, ver, met)
     bsm_rvp.write(root, nam, desc, builder, ver) # parameters
-    bsm_rvh.write(root, nam, desc, builder, ver, wshd) # HRUs
-    bsm_rvt.write(root, nam, desc, builder, ver, met, writemetfiles=writemetfiles) # temporal
+    bsm_rvh.write(root, nam, desc, builder, ver, wshd) # HRUs    
     bsm_rvc.write(root, nam, desc, builder, ver)
     rvbat.write(root, nam, ver)
 

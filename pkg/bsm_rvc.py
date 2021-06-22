@@ -10,8 +10,4 @@ def write(root, nam, desc, builder, ver):
         f.write('# using pyRaven builder\n')
         f.write('# Raven version: ' + ver + '\n')
         f.write('# --------------------------------------------\n\n')
-        f.write('# initial conditions\n')   
-
-        f.write(':UniformInitialConditions SOIL[0] {:>10.3f}\n'.format(10))
-        f.write(':UniformInitialConditions SOIL[1] {:>10.3f}\n'.format(10))
-        f.write(':UniformInitialConditions SOIL[2] {:>10.3f}\n'.format(10))
+        f.write('# no initial conditions set, all reservoirs at 0\n')   
