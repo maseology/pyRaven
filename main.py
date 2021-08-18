@@ -1,12 +1,27 @@
 
 
-from pkg import buildBasinSM
+from pkg import buildHBV, buildBasin, buildStation
+from pyInstruct import instruct
 
 
-# build.HBV("M:/Peel/Raven-PWRMM21/PWRMM21.raven")
+fp = "O:/Raven-snowmelt/OWRC-snowpack.raven" #"M:/Schomberg-Raven/SchombergBasin.raven" #"M:/OWRC-BasinRaven/OWRCbasin.raven" #"M:/Peel/Raven-PWRMM21/PWRMM21.raven"
 
 
-buildBasinSM.BasinMelt("M:/OWRC-BasinRaven/OWRCbasin.raven")
+
+ins = instruct.build(fp)
+if ins.mode == "HBV":
+    buildHBV.HBV(ins)
+elif ins.mode == 'BasinSnowmelt':
+    buildBasin.BasinMelt(ins)
+elif ins.mode.lower() == 'snowmelt':
+    buildStation.StationMelt(ins)
+elif ins.mode == '':
+    print('Raven builder "mode" not provided in ' + fp)
+else:
+    print('Raven builder mode "{}" not found'.format(ins.mode))
+
+
+
 
 
 

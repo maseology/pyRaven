@@ -1,12 +1,11 @@
 
-import time
 
 # build Primary Input file (.rvi)
-def write(root, nam, builder, ver, met):
+def write(root, nam, builder, ver, wshd, met):
     with open(root + nam + ".rvi","w") as f:
         f.write('# -------------------------------------------------------\n')
         f.write('# Raven Input (.rvi) file\n')
-        f.write('# Basin snowmelt model\n')
+        f.write('# daily snowmelt model\n')
         f.write('# written by ' + builder + '\n')
         f.write('# using pyRaven builder\n')
         f.write('# Raven version: ' + ver + '\n')
@@ -20,7 +19,11 @@ def write(root, nam, builder, ver, met):
 
 
         f.write(':SoilModel            SOIL_ONE_LAYER\n')
+        f.write(':Routing              ROUTE_NONE\n')
+        f.write(':CatchmentRoute       DUMP\n')
+        if len(wshd.xr) > 1: f.write(':InterpolationMethod  INTERP_FROM_FILE          GaugeWeightTable.txt\n')
         f.write(':RainSnowFraction     RAINSNOW_DATA\n')
+
 
         f.write(':PotentialMeltMethod  POTMELT_DEGREE_DAY\n') #####################################################################
 
@@ -29,20 +32,20 @@ def write(root, nam, builder, ver, met):
         f.write(':HydrologicProcesses    #  ALGORITHM            ProcessFrom      ProcessTo\n') 
         f.write(' :SnowRefreeze             FREEZE_DEGREE_DAY    SNOW_LIQ         SNOW\n') #####################################################################
         f.write(' :Precipitation            PRECIP_RAVEN         ATMOS_PRECIP     MULTIPLE\n')
-        f.write(' :SnowBalance              SNOBAL_SIMPLE_MELT   SNOW             SNOW_LIQ\n')
+        f.write(' :SnowBalance              SNOBAL_GAWSER   SNOW             SNOW_LIQ\n')
         f.write('  :-->Overflow             RAVEN_DEFAULT        SNOW_LIQ         PONDED_WATER\n')
         f.write(':EndHydrologicProcesses\n')
 
 
         f.write('\n# output options\n')
-        f.write(':WriteMassBalanceFile\n')
-        f.write(':WriteForcingFunctions\n')
-        f.write(':CustomOutput DAILY AVERAGE SNOW BY_HRU\n')
+        # f.write(':WriteMassBalanceFile\n')
+        # f.write(':WriteForcingFunctions\n')
+        f.write(':CustomOutput DAILY AVERAGE SNOW_DEPTH BY_HRU\n')
 
         # f.write(':EvaluationMetrics KLING_GUPTA NASH_SUTCLIFFE PCT_BIAS\n')
 
         # f.write('\n:WriteNetCDFFormat\n')
         # f.write(':CustomOutput MONTHLY AVERAGE To:SLOW_RESERVOIR BY_HRU\n') # monthly recharge by hru
 
-        # :SilentMode
-        # :SuppressOutput
+        f.write('\n:SilentMode\n') # output to the command prompt is minimized
+        # f.write(':SuppressOutput\n') # Suppresses all standard output, including generation of Hydrograph, transport output, and watershed storage files. Does not turn of optional outputs which were requested elsewhere in the input file

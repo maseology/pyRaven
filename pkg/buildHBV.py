@@ -10,14 +10,12 @@ from pyGrid.indx import INDX
 from pyMet.met import Met
 from pyGrid.hdem import HDEM
 from pyGrid.sws import Watershed
-from pyInstruct import instruct
 from pkg import hru, solris3, surfgeo, hbv_params, hbv_rvi, hbv_rvh, hbv_rvp, hbv_rvt, hbv_rvc, rvbat
 # import rvi, rvh, rvp, rvt, rvc, rvbat
 
 
 
-def HBV(fp):
-    ins = instruct.build(fp)
+def HBV(ins):
 
     stmsg = "=== Raven HBV-EC builder ==="
     desc = ins.desc
