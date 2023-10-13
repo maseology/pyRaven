@@ -27,8 +27,8 @@ def writeGaugeWeightTable(root, wshd):
         f.write(':GaugeWeightTable\n')
         f.write(' {} {}\n'.format(n,n))
         for _ in wshd.xr:
-            a = [0.0] * n
-            a[c] = 1.0
+            a = [0.] * n
+            a[c] = 1.
             f.write(' ' + ' '.join([str(v) for v in a]) + '\n')
             c += 1
         f.write(':EndGaugeWeightTable\n')
@@ -56,7 +56,6 @@ def write(root, nam, desc, builder, ver, wshd, writemetfiles=False):
             f.write(' :Elevation {}\n'.format(s.elev))
             f.write(' :RedirectToFile input\\m{}.rvt\n'.format(t))
             f.write(':EndGauge\n\n')
-            if writemetfiles: 
-                getDailyAPI(s.ylat, s.xlng, root+'input\\m{}.rvt'.format(t))
-                pbar.update()                
+            if writemetfiles: getDailyAPI(s.ylat, s.xlng, root+'input\\m{}.rvt'.format(t))
+            pbar.update()                
         pbar.close()

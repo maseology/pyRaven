@@ -4,8 +4,7 @@ from pkg import buildHBV, buildBasin, buildStation
 from pyInstruct import instruct
 
 
-fp = "O:/Raven-snowmelt/OWRC-snowpack.raven" #"M:/Schomberg-Raven/SchombergBasin.raven" #"M:/OWRC-BasinRaven/OWRCbasin.raven" #"M:/Peel/Raven-PWRMM21/PWRMM21.raven"
-
+fp = "M:/OWRC-Raven/OWRC22.raven" #"O:/Raven-snowmelt/OWRC-snowpack.raven" #"M:/Schomberg-Raven/SchombergBasin.raven" #"M:/Peel/Raven-PWRMM21/PWRMM21.raven"
 
 
 ins = instruct.build(fp)
@@ -19,12 +18,4 @@ elif ins.mode == '':
     print('Raven builder "mode" not provided in ' + fp)
 else:
     print('Raven builder mode "{}" not found'.format(ins.mode))
-
-
-
-
-
-
-
-
 

@@ -1,5 +1,6 @@
 
 __switcher = {
+        0: 'nodata',
         1: 'Low',       
         2: 'LowMedium', #'Low_Medium',
         3: 'Medium',

@@ -2,7 +2,7 @@
 import time
 
 # build Primary Input file (.rvi)
-def write(root, nam, builder, ver, met):
+def write(root, nam, builder, ver, dtb, dte, intvl):
     with open(root + nam + ".rvi","w") as f:
         f.write('# -------------------------------------------------------\n')
         f.write('# Raven Input (.rvi) file\n')
@@ -14,12 +14,12 @@ def write(root, nam, builder, ver, met):
 
         f.write(':RunName ' + nam + '\n')
         f.write(':OutputDirectory ' + root + "output\n")
-        f.write(':StartDate ' + met.dtb.strftime("%Y-%m-%d %H:%M:%S") + '\n')
-        f.write(':EndDate   ' + met.dte.strftime("%Y-%m-%d %H:%M:%S") + '\n')
-        if met.intvl < 86400:
-            f.write(':TimeStep  ' + time.strftime('%H:%M:%S', time.gmtime(met.intvl)) + '\n\n')
+        f.write(':StartDate ' + dtb.strftime("%Y-%m-%d %H:%M:%S") + '\n')
+        f.write(':EndDate   ' + dte.strftime("%Y-%m-%d %H:%M:%S") + '\n')
+        if intvl < 86400:
+            f.write(':TimeStep  ' + time.strftime('%H:%M:%S', time.gmtime(intvl)) + '\n\n')
         else:
-            f.write(':TimeStep  {}'.format(met.intvl/86400) + '\n\n')
+            f.write(':TimeStep  {}'.format(intvl/86400) + '\n\n')
 
 
         f.write(':SoilModel            SOIL_MULTILAYER 3\n')
