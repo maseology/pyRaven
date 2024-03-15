@@ -6,7 +6,7 @@ from pymmio import files as mmio, ascii
 from pyGrid.indx import INDX
 from pyGrid.hdem import HDEM
 from pyGrid.sws import Watershed
-from pkg import hru, solris3, surfgeo, hbv_params, hbv_rvi, hbv_rvh, hbv_rvp, rvt_dailyAPI, hbv_rvc, rvbat
+from pkg import hru, solris3, surfgeo, hbv_params, hbv_rvi, hbv_rvh, hbv_rvp, rvt_OWRCapi, hbv_rvc, rvbat
 # import rvi, rvh, rvp, rvt, rvc, rvbat
 
 
@@ -28,12 +28,16 @@ def HBV(ins):
     root = root0 + nam + "\\"
     now = datetime.now()
     builder = 'M. Marchildon ' + now.strftime("%Y-%m-%d %H:%M:%S")
-    ver = "3.0"
+    ver = "3.8"
 
 
     # options
     params = hbv_params.Params
+    ts = 86400
+    obsFP = ""
     writemetfiles = not os.path.exists(root + "input")
+    if 'timestep' in ins.params: ts = int(ins.params['timestep'])
+    if 'obsfp' in ins.params: obsFP = ins.params['obsfp']
     if 'options' in ins.params:
         if 'overwritetemporalfiles' in ins.params['options']:
             writemetfiles = ins.params['options']['overwritetemporalfiles']      
@@ -45,7 +49,7 @@ def HBV(ins):
     print("\n=== Loading data..")
     # met = Met(ins.params['met'], skipdata = not writemetfiles)
     # if writemetfiles: met.dftem = np.transpose(met.dftem, (1, 0, 2)) # re-order array axes
-    hdem = HDEM(ins.params['hdem'], True)
+    hdem = HDEM(ins.params['hdem'])
     print(' loading', ins.params['sg'])
     sg = INDX(ins.params['sg'], hdem.gd).x
     print(' loading', ins.params['lu'])
@@ -64,6 +68,7 @@ def HBV(ins):
 
     # build subwatersheds
     sel = None
+    if 'cid0' in ins.params: sel = int(ins.params['cid0'])
     if 'selwshd' in ins.params: sel = set(ascii.readInts(ins.params['selwshd']))
     lu = {k: solris3.xr(v) for k, v in lu.items()}
     sg = {k: surfgeo.xr(v) for k, v in sg.items()}
@@ -78,10 +83,10 @@ def HBV(ins):
 
 
     print("\n\n=== Writing data..")
-    hbv_rvi.write(root, nam, builder, ver, ins.params['dtb'], ins.params['dte'], 86400)
+    hbv_rvi.write(root, nam, builder, ver, ins.params['dtb'], ins.params['dte'], ts)
     hbv_rvp.write(root, nam, desc, builder, ver, hrus) # parameters
     hbv_rvh.write(root, nam, desc, builder, ver, wshd, hrus, params) # HRUs
-    rvt_dailyAPI.write(root, nam, desc, builder, ver, wshd, writemetfiles=writemetfiles) # temporal
+    rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd, obsFP, ts, writemetfiles=writemetfiles) # temporal
     hbv_rvc.write(root, nam, desc, builder, ver)
     rvbat.write(root, nam, ver)
 

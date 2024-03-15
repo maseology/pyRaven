@@ -14,15 +14,15 @@ def write(root, nam, desc, builder, ver, wshd, hrus, par):
 
         f.write('####\n')
         f.write(':SubBasins\n')
-        f.write(' :Attributes           NAME  DOWNSTREAM_ID        PROFILE   REACH_LENGTH         GAUGED\n')
-        f.write(' :Units                none           none           none             km           none\n')
+        f.write(' :Attributes           NAME  DOWNSTREAM_ID        PROFILE   REACH_LENGTH    GAUGED\n')
+        f.write(' :Units                none           none           none             km      none\n')
         tt = set()
         for _,t in wshd.t.items():
             tt.add(t[0])
-            f.write('  {:<10}{:>15}{:15}{:>15}{:15.3f}{:15}\n'.format(t[0],"s" + str(t[0]),t[1],'default_trap',wshd.s[t[0]].rchlen,0))
+            f.write('  {:<10}{:>15}{:15}{:>15}{:15.3f}{:10}\n'.format(t[0],"s" + str(t[0]),t[1],'default_trap',wshd.s[t[0]].rchlen,0))
         for t in wshd.xr:
             if t in tt: continue
-            f.write('  {:<10}{:>15}{:15}{:>15}{:15.3f}{:15}\n'.format(t,"s" + str(t),-1,'default_trap',wshd.s[t].rchlen,0))
+            f.write('  {:<10}{:>15}{:15}{:>15}{:15.3f}{:10}\n'.format(t,"s" + str(t),-1,'default_trap',wshd.s[t].rchlen,1))
         f.write(':EndSubBasins\n\n')
 
         f.write('####\n')
@@ -49,3 +49,8 @@ def write(root, nam, desc, builder, ver, wshd, hrus, par):
                 c += 1
                 f.write('  {:<10}{:10.3f}{:10.1f}{:10.1f}{:10.1f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,s.elv,s.ylat,s.xlng,t,k[0][0],k[0][1],k[1],s.slp,s.asp))
         f.write(':EndHRUs\n\n')
+
+        f.write('####\n')
+        f.write(':HRUGroup AllHRUs\n')
+        f.write(' 1-{}'.format(c))
+        f.write(':EndHRUGroup\n\n')

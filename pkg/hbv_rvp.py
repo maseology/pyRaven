@@ -148,6 +148,8 @@ def write(root, nam, desc, builder, ver, hrus):
         f.write(':SoilParameterList\n')
         sgxr = {'Low': 50., 
             'LowMedium': 150., 
+            'Medium': 500.,
+            'MediumHigh': 1500.,
             'High': 5000.,
             'WetlandSediments': 100.,  
             'Streambed': 1000.,               
