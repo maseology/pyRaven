@@ -6,7 +6,7 @@ from pymmio import files as mmio, ascii
 from pyGrid.indx import INDX
 from pyGrid.hdem import HDEM
 from pyGrid.sws import Watershed
-from pkg import hru, solris3, surfgeo, hbv_params, hbv_rvi, hbv_rvh, hbv_rvp, rvt_OWRCapi, hbv_rvc, rvbat
+from pkg import hru, solris3, surfgeo_OGS, hbv_params, hbv_rvi, hbv_rvh, hbv_rvp, rvt_OWRCapi, hbv_rvc, rvbat
 # import rvi, rvh, rvp, rvt, rvc, rvbat
 
 
@@ -43,6 +43,9 @@ def HBV(ins):
             writemetfiles = ins.params['options']['overwritetemporalfiles']      
         if 'minhrufrac' in ins.params['options']:
             params.hru_minf = float(ins.params['options']['minhrufrac'])
+        if 'lakehruthresh' in ins.params['options']:
+            params.hru_min_lakef = float(ins.params['options']['lakehruthresh'])            
+        
 
 
     # load data
@@ -51,7 +54,8 @@ def HBV(ins):
     # if writemetfiles: met.dftem = np.transpose(met.dftem, (1, 0, 2)) # re-order array axes
     hdem = HDEM(ins.params['hdem'])
     print(' loading', ins.params['sg'])
-    sg = INDX(ins.params['sg'], hdem.gd).x
+    sg = INDX(ins.params['sg'], hdem.gd).x # must be the same grid definition
+    sg = surfgeo_OGS.convertOGStoRelativeK(sg) # converts OGS surficial geology index to relative permeabilities
     print(' loading', ins.params['lu'])
     lu = INDX(ins.params['lu'], hdem.gd).x # must be the same grid definition
 
@@ -71,9 +75,9 @@ def HBV(ins):
     if 'cid0' in ins.params: sel = int(ins.params['cid0'])
     if 'selwshd' in ins.params: sel = set(ascii.readInts(ins.params['selwshd']))
     lu = {k: solris3.xr(v) for k, v in lu.items()}
-    sg = {k: surfgeo.xr(v) for k, v in sg.items()}
+    sg = {k: surfgeo_OGS.xr(v) for k, v in sg.items()}
     wshd = Watershed(ins.params['wshd'], hdem, sel)
-    hrus = hru.HRU(wshd,lu,sg,params.hru_minf).hrus
+    hrus = hru.HRU(wshd,lu,sg,params.hru_minf,params.hru_min_lakef).hrus
 
 
     # make directories   

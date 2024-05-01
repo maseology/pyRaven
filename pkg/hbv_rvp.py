@@ -8,10 +8,15 @@ def write(root, nam, desc, builder, ver, hrus):
     dsg = set()
     dveg = set()
     for _,vv in hrus.items():
-        for v in vv:
-            dlu.add(v[0][0])
-            dveg.add(v[0][1])
-            dsg.add(v[1])
+        if vv=='lake':
+            dlu.add('LAKE')
+            dveg.add('LAKE')
+            dsg.add('LAKE')
+        else:
+            for v in vv:
+                dlu.add(v[0][0])
+                dveg.add(v[0][1])
+                dsg.add(v[1])
 
     with open(root + nam + ".rvp","w") as f:
         f.write('# --------------------------------------------\n')
@@ -40,7 +45,8 @@ def write(root, nam, desc, builder, ver, hrus):
             'Marsh': (0.,.25),  
             'Wetland': (0.,.25),  
             'Barren': (0.,0.),               
-            'noflow': (0.,0.)}
+            'noflow': (0.,0.),
+            'LAKE': (0.,0.)}
         f.write(' :Attributes                     IMPERM  FOREST_COV\n')
         f.write(' :Units                            frac        frac\n')
         # f.write('  LU_ALL    {:12}{:12}\n'.format(0.0,0.0))
@@ -53,7 +59,8 @@ def write(root, nam, desc, builder, ver, hrus):
             'MixedVegetation': (3.,4.5,5.), 
             'Shrub': (1,2.5,5.), 
             'ShortVegetation': (.5,4.5,5.),
-            'Bare': (0.,0.,.0001)}
+            'Bare': (0.,0.,.0001),
+            'LAKE': (0.,0.,0.)}
         f.write(' :Attributes                   MAX_HT   MAX_LAI  MAX_LEAF_COND\n')
         f.write(' :Units                             m      none       mm_per_s\n')        
         # f.write('  VEG_ALL  {:10}{:10}{:14}\n'.format(3.0,4.5,5.0))
@@ -73,15 +80,18 @@ def write(root, nam, desc, builder, ver, hrus):
         # f.write('  FAST      {:10}{:10}{:10}{:10}\n'.format(.8,.2,0.0,0.0))
         # f.write('  SLOW      {:10}{:10}{:10}{:10}\n'.format(.8,.2,0.0,0.0))   
         for s in dsg: 
-                f.write('  ' + s + 'TOP\n')
-                f.write('  ' + s + 'FAST\n')
-                f.write('  ' + s + 'SLOW\n')
+            if s=='LAKE':continue
+            f.write('  ' + s + 'TOP\n')
+            f.write('  ' + s + 'FAST\n')
+            f.write('  ' + s + 'SLOW\n')
         f.write(':EndSoilClasses\n\n')
 
         f.write('# soil profile definition\n')        
         f.write(':SoilProfiles\n')
         # f.write('  DEFAULT_P,    3,    TOP, 0.075, FAST, 0.1,  SLOW, 5.0\n')
-        for s in dsg: f.write('  {0:25}{1:5}{0:>26}TOP{2:10.3f}{0:>25}FAST{3:10.3f}{0:>25}SLOW{4:10.3f}\n'.format(s,3,0.075,0.1,5.0))
+        for s in dsg: 
+            if s=='LAKE':continue
+            f.write('  {0:25}{1:5}{0:>26}TOP{2:10.3f}{0:>25}FAST{3:10.3f}{0:>25}SLOW{4:10.3f}\n'.format(s,3,0.075,0.1,5.0))
         f.write('  LAKE                         0\n')
         f.write(':EndSoilProfiles\n\n')
 
@@ -136,6 +146,8 @@ def write(root, nam, desc, builder, ver, hrus):
         for v in dveg:
             if v == 'Bare':
                 f.write('  {:25}  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0\n'.format(v))
+            elif v == 'LAKE':
+                f.write('  {:25}  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0\n'.format(v))
             elif v == 'Coniferous':
                 f.write('  {:25}  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0\n'.format(v))
             elif v == 'MixedVegetation':
@@ -170,9 +182,10 @@ def write(root, nam, desc, builder, ver, hrus):
         # f.write('  SLOW             _DEFAULT       _DEFAULT            0.0       _DEFAULT          _DEFAULT       _DEFAULT       0.044002            1.0\n')
         # f.write('  TOP              _DEFAULT       _DEFAULT            0.0       _DEFAULT          _DEFAULT            0.0       _DEFAULT       _DEFAULT\n')        
         for s in dsg: 
-            f.write('  {:25} _DEFAULT        _DEFAULT       _DEFAULT          _DEFAULT        _DEFAULT       _DEFAULT         _DEFAULT           _DEFAULT        _DEFAULT       _DEFAULT\n'.format(s + 'TOP ')) 
-            f.write('  {:25} _DEFAULT        _DEFAULT       _DEFAULT          _DEFAULT          1.1216{:15.3f}         _DEFAULT           _DEFAULT        0.034432         1.9631\n'.format(s + 'FAST',sgxr[s])) 
-            f.write('  {:25} _DEFAULT        _DEFAULT       _DEFAULT          _DEFAULT        _DEFAULT       _DEFAULT         _DEFAULT           _DEFAULT        0.044002       _DEFAULT\n'.format(s + 'SLOW'))        
+            if s=='LAKE':continue
+            f.write('  {:25} _DEFAULT        _DEFAULT       _DEFAULT       _DEFAULT           _DEFAULT       _DEFAULT         _DEFAULT           _DEFAULT        _DEFAULT       _DEFAULT\n'.format(s + 'TOP ')) 
+            f.write('  {:25} _DEFAULT        _DEFAULT       _DEFAULT       _DEFAULT             1.1216{:15.3f}         _DEFAULT           _DEFAULT        0.034432         1.9631\n'.format(s + 'FAST',sgxr[s])) 
+            f.write('  {:25} _DEFAULT        _DEFAULT       _DEFAULT       _DEFAULT           _DEFAULT       _DEFAULT         _DEFAULT           _DEFAULT        0.044002       _DEFAULT\n'.format(s + 'SLOW'))        
         f.write(':EndSoilParameterList\n\n')
 
 

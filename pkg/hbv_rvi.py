@@ -94,9 +94,9 @@ def write(root, nam, builder, ver, dtb, dte, intvl):
         # f.write(':CustomOutput DAILY AVERAGE SNOW BY_HRU\n')
         # f.write(':AggregatedVariable FAST_RESERVOIR AllHRUs\n') # deprecated, see LateralEquilibrate above
         # f.write(':AggregatedVariable SLOW_RESERVOIR AllHRUs\n')
-        f.write(':DefineHRUGroups AllHRUs\n')
-        f.write(':LateralEquilibrate RAVEN_DEFAULT AllHRUs FAST_RESERVOIR 1.0\n')
-        f.write(':LateralEquilibrate RAVEN_DEFAULT AllHRUs SLOW_RESERVOIR 1.0\n')
+        f.write(':DefineHRUGroups LandHRUs LakeHRUs\n')
+        f.write(':LateralEquilibrate RAVEN_DEFAULT LandHRUs FAST_RESERVOIR 1.0 INTERBASIN\n')
+        f.write(':LateralEquilibrate RAVEN_DEFAULT LandHRUs SLOW_RESERVOIR 1.0 INTERBASIN\n')
         f.write(':EvaluationMetrics KLING_GUPTA NASH_SUTCLIFFE PCT_BIAS\n')
 
         # f.write('\n:WriteNetCDFFormat\n')

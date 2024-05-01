@@ -3,11 +3,15 @@ import pandas as pd
 from datetime import datetime
 from tqdm import tqdm
 from pymmio import files as mmio
-from pkg.rvt_Obs import writeDailyObs
+from pkg import rvt_Obs
 
 
-def getDailyAPI(lat,lng,fp):
-    df = pd.read_json("http://fews.oakridgeswater.ca:8080/dymetp/{}/{}".format(lat,lng)) #("http://golang.oakridgeswater.ca:8080/cmet/{}/{}".format(lat,lng))
+def getDailyAPI(fp,lat=None,lng=None,cid=None):
+    if cid is None:
+        url = "http://fews.oakridgeswater.ca:8080/dymetp/{}/{}".format(lat,lng) # "http://golang.oakridgeswater.ca:8080/cmet/{}/{}".format(lat,lng)
+    else:
+        url = "http://fews.oakridgeswater.ca:8080/dymetp/{}".format(cid)
+    df = pd.read_json(url)
     dtb = df['Date'].iloc[0]
     dte = df['Date'].iloc[-1]
     with open(fp,"w") as f:
@@ -23,8 +27,11 @@ def getDailyAPI(lat,lng,fp):
     return dtb, dte
 
 
-def get6hourlyAPI(lat,lng,fp):
-    df = pd.read_json("http://fews.oakridgeswater.ca:8080/h6metp/{}/{}".format(lat,lng)) #("http://golang.oakridgeswater.ca:8080/cmet/{}/{}".format(lat,lng))
+def get6hourlyAPI(fp,lat=None,lng=None,cid=None):
+    if cid is None:
+        df = pd.read_json("http://fews.oakridgeswater.ca:8080/h6metp/{}/{}".format(lat,lng)) #("http://golang.oakridgeswater.ca:8080/cmet/{}/{}".format(lat,lng))
+    else:
+        df = pd.read_json("http://fews.oakridgeswater.ca:8080/h6metp/{}".format(cid))
     dtb = df['Date'].iloc[0]
     dte = df['Date'].iloc[-1]
     with open(fp,"w") as f:
@@ -77,10 +84,13 @@ def write(root, nam, desc, builder, ver, wshd, obsFP, ts, writemetfiles=False):
             f.write(' :RedirectToFile input\\m{}.rvt\n'.format(t))
             f.write(':EndGauge\n\n')
             if writemetfiles: 
-                if ts==84600:
-                    getDailyAPI(s.ylat, s.xlng, root+'input\\m{}.rvt'.format(t))
+                if ts==86400:
+                    # getDailyAPI(lat=s.ylat, lng=s.xlng, root+'input\\m{}.rvt'.format(t))
+                    getDailyAPI(root+'input\\m{}.rvt'.format(t), cid=t)
                 elif ts==21600:
                     get6hourlyAPI(s.ylat, s.xlng, root+'input\\m{}.rvt'.format(t))
+                else:
+                    print("rvt_OWRCapi.write WARNING: unsupported timestep {}".format(ts))
             pbar.update()                
         pbar.close()
 
@@ -88,4 +98,4 @@ def write(root, nam, desc, builder, ver, wshd, obsFP, ts, writemetfiles=False):
             ofp = "input\\o{}.rvt".format(mmio.getFileName(obsFP))
             f.write(' :RedirectToFile {}\n'.format(ofp))
             swsID = wshd.outlets()[0]
-            if not os.path.exists(ofp): writeDailyObs(obsFP, root+ofp, swsID)
+            if not os.path.exists(ofp): rvt_Obs.writeDailyObs(obsFP, root+ofp, swsID)

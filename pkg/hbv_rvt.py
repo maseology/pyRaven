@@ -1,6 +1,6 @@
 
-import re
-import numpy as np
+# import re
+# import numpy as np
 from tqdm import tqdm
 from pymmio import files as mmio
 

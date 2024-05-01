@@ -31,7 +31,7 @@
 # 204	Extraction–Aggregate
 # 205	Extraction –Peat/Topsoil
 # 250	Undifferentiated
-
+# 255   Nodata
 
 # TO
 
@@ -86,6 +86,7 @@ __switcher = {
         204: ("noflow", "Bare"),
         205: ("ShortVegetation", "ShortVegetation"),
         250: ("Agriculture", "ShortVegetation"),
+        255: ("Agriculture", "ShortVegetation"),
         -9999: ("Agriculture", "ShortVegetation")
     }
 
