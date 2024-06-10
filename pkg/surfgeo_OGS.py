@@ -25,9 +25,9 @@ def convertOGStoRelativeK(d):
     ogs = {
         0: 'Variable',      # Waterbody
         10: 'Low',          # Precambrian bedrock
-        20: 'Variable',     # Bedrock-drift complex in Precambrian terrain
-        21: 'Variable',     # Bedrock-drift complex in Precambrian terrain: Primarily till cover
-        22: 'Variable',     # Bedrock-drift complex in Precambrian terrain: Primarily stratified drift cover
+        20: 'Low',          # Bedrock-drift complex in Precambrian terrain
+        21: 'Low',          # Bedrock-drift complex in Precambrian terrain: Primarily till cover
+        22: 'Low',          # Bedrock-drift complex in Precambrian terrain: Primarily stratified drift cover
         30: 'Variable',     # Sedimentary (Paleozoic) bedrock
         40: 'Variable',     # Bedrock-drift complex in Paleozoic terrain
         41: 'Variable',     # Bedrock-drift complex in Paleozoic terrain: Primarily till cover

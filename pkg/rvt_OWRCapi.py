@@ -7,10 +7,15 @@ from pkg import rvt_Obs
 
 
 def getDailyAPI(fp,lat=None,lng=None,cid=None):
-    if cid is None:
-        url = "http://fews.oakridgeswater.ca:8080/dymetp/{}/{}".format(lat,lng) # "http://golang.oakridgeswater.ca:8080/cmet/{}/{}".format(lat,lng)
-    else:
+    # if cid is None:
+    #     url = "http://fews.oakridgeswater.ca:8080/dymetp/{}/{}".format(lat,lng) # "http://golang.oakridgeswater.ca:8080/cmet/{}/{}".format(lat,lng)
+    # else:
+    #     url = "http://fews.oakridgeswater.ca:8080/dymetp/{}".format(cid)
+    if cid is not None:
         url = "http://fews.oakridgeswater.ca:8080/dymetp/{}".format(cid)
+        if url=='NA': url = "http://fews.oakridgeswater.ca:8080/dymetp/{}/{}".format(lat,lng)
+    else:
+        url = "http://fews.oakridgeswater.ca:8080/dymetp/{}/{}".format(lat,lng)
     df = pd.read_json(url)
     dtb = df['Date'].iloc[0]
     dte = df['Date'].iloc[-1]
@@ -86,7 +91,8 @@ def write(root, nam, desc, builder, ver, wshd, obsFP, ts, writemetfiles=False):
             if writemetfiles: 
                 if ts==86400:
                     # getDailyAPI(lat=s.ylat, lng=s.xlng, root+'input\\m{}.rvt'.format(t))
-                    getDailyAPI(root+'input\\m{}.rvt'.format(t), cid=t)
+                    # getDailyAPI(root+'input\\m{}.rvt'.format(t), cid=t)
+                    getDailyAPI(root+'input\\m{}.rvt'.format(t), lat=s.ylat, lng=s.xlng, cid=t)
                 elif ts==21600:
                     get6hourlyAPI(s.ylat, s.xlng, root+'input\\m{}.rvt'.format(t))
                 else:

@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 from timeit import default_timer as timer
 from pymmio import files as mmio, ascii
+from pyGrid.definition import GDEF
 from pyGrid.indx import INDX
 from pyGrid.hdem import HDEM
 from pyGrid.sws import Watershed
@@ -53,6 +54,7 @@ def HBV(ins):
     # met = Met(ins.params['met'], skipdata = not writemetfiles)
     # if writemetfiles: met.dftem = np.transpose(met.dftem, (1, 0, 2)) # re-order array axes
     hdem = HDEM(ins.params['hdem'])
+    # if 'gdef' in ins.params: hdem.Crop(GDEF(ins.params['gdef']))
     print(' loading', ins.params['sg'])
     sg = INDX(ins.params['sg'], hdem.gd).x # must be the same grid definition
     sg = surfgeo_OGS.convertOGStoRelativeK(sg) # converts OGS surficial geology index to relative permeabilities
