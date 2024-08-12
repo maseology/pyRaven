@@ -19,8 +19,11 @@ def write(root, nam, desc, builder, ver, wshd, hrus, par):
         f.write(':SubBasins\n')
         f.write(' :Attributes           NAME  DOWNSTREAM_ID        PROFILE   REACH_LENGTH    GAUGED\n')
         f.write(' :Units                none           none           none             km      none\n')
-        for usid,dsid in wshd.t.items():
-            if hrus[usid]=="lake":
+        for usid,h in hrus.items():
+            dsid = -1
+            if usid in wshd.t: dsid = wshd.t[usid]
+            if not dsid in hrus: dsid = -1
+            if h=="lake":
                 f.write('  {:<10}{:>15}{:15}{:>15}{:>15}{:10}\n'.format(usid,"s"+str(usid),dsid,'default_trap','ZERO-',0))
             else:
                 f.write('  {:<10}{:>15}{:15}{:>15}{:15.3f}{:10}\n'.format(usid,"s"+str(usid),dsid,'default_trap',wshd.s[usid].rchlen,0))

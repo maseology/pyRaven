@@ -76,6 +76,7 @@ def HBV(ins):
     sel = None
     if 'cid0' in ins.params: sel = int(ins.params['cid0'])
     if 'selwshd' in ins.params: sel = set(ascii.readInts(ins.params['selwshd']))
+    if 'swsids' in ins.params: sel = set(ins.params['swsids'])
     lu = {k: solris3.xr(v) for k, v in lu.items()}
     sg = {k: surfgeo_OGS.xr(v) for k, v in sg.items()}
     wshd = Watershed(ins.params['wshd'], hdem, sel)
