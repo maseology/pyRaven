@@ -1,10 +1,13 @@
 
+import os
 from datetime import datetime
 import pandas as pd
 import numpy as np
 
 from pymmio import ascii
+from pyGrid.definition import GDEF
 from pyGrid.indx import INDX
+from pyGrid.real import REAL
 from pyGrid.hdem import HDEM
 from pyGrid.sws import Watershed
 from pyInstruct import instruct
@@ -13,7 +16,7 @@ from pkg import hbv_params, hru, solris3, surfgeo_OGS
 
 
 
-insfp = "M:/OWRC-Raven/OWRC23.raven" # "M:\\Peel\\Raven-PWRMM21\\PWRMM21.raven"
+insfp = "O:/Orangeville-Raven/Orangeville.raven" #"M:/OWRC-Raven/OWRC23.raven" # "M:\\Peel\\Raven-PWRMM21\\PWRMM21.raven"
 
 
 
@@ -44,10 +47,28 @@ dmonth = df2.groupby(['month']).mean().to_dict()
 dall = df2.groupby(['month']).mean().sum().to_dict()
 # print(dall)
 
+def relpath(fp):
+    if os.path.exists(fp): return fp
+    if not os.path.exists(ins.root+fp): 
+        print('error: file not found: '+fp)
+        quit()
+    else:
+        return ins.root+fp
 
-hdem = HDEM(ins.params['hdem'], True)
-lu = INDX(ins.params['lu'], hdem.gd).x # must be the same grid definition
-sg = INDX(ins.params['sg'], hdem.gd).x # must be the same grid definition
+
+dem = None
+gd = None
+if 'hdem' in ins.params: 
+    dem = HDEM(relpath(ins.params['hdem']))
+    # if 'gdef' in ins.params: hdem.Crop(GDEF(relpath(ins.params['gdef'])))
+    gd = dem.gd
+else: #if 'dem' in ins.params: 
+    print(' loading', ins.params['dem'])
+    gd = GDEF(relpath(ins.params['gdef']))
+    dem = REAL(relpath(ins.params['dem']), gd, np.float32)
+    
+lu = INDX(relpath(ins.params['lu']), gd).x # must be the same grid definition
+sg = INDX(relpath(ins.params['sg']), gd).x # must be the same grid definition
 sg = surfgeo_OGS.convertOGStoRelativeK(sg) # converts OGS surficial geology index to relative permeabilities
 
 # # check
@@ -61,7 +82,8 @@ sg = {k: surfgeo_OGS.xr(v) for k, v in sg.items()}
 sel = None
 if 'cid0' in ins.params: sel = int(ins.params['cid0'])
 if 'selwshd' in ins.params: sel = set(ascii.readInts(ins.params['selwshd']))
-wshd = Watershed(ins.params['wshd'], hdem, sel)
+if 'swsids' in ins.params: sel = set(ins.params['swsids'])
+wshd = Watershed(relpath(ins.params['wshd']), dem, sel)
 hrus = hru.HRU(wshd,lu,sg,params.hru_minf,params.hru_min_lakef).hrus
 
 # # check
@@ -149,4 +171,4 @@ for sid,cids in wshd.xr.items():
             if not t in dallC: rch[cid] = dsum[sid]
 
 print(' printing..')
-hdem.gd.saveBinary(ofp+".bil",rch)
+gd.saveBinary(ofp+".bil",rch)

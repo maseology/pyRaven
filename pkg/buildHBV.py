@@ -1,10 +1,12 @@
 
 import os
+import numpy as np
 from datetime import datetime, timedelta
 from timeit import default_timer as timer
 from pymmio import files as mmio, ascii
 from pyGrid.definition import GDEF
 from pyGrid.indx import INDX
+from pyGrid.real import REAL
 from pyGrid.hdem import HDEM
 from pyGrid.sws import Watershed
 from pkg import hru, solris3, surfgeo_OGS, hbv_params, hbv_rvi, hbv_rvh, hbv_rvp, rvt_OWRCapi, hbv_rvc, rvbat
@@ -47,19 +49,37 @@ def HBV(ins):
         if 'lakehruthresh' in ins.params['options']:
             params.hru_min_lakef = float(ins.params['options']['lakehruthresh'])            
         
+    def relpath(fp):
+        if os.path.exists(fp): return fp
+        if not os.path.exists(root0+fp): 
+            print('error: file not found: '+fp)
+            quit()
+        else:
+            return root0+fp
+
 
 
     # load data
     print("\n=== Loading data..")
     # met = Met(ins.params['met'], skipdata = not writemetfiles)
     # if writemetfiles: met.dftem = np.transpose(met.dftem, (1, 0, 2)) # re-order array axes
-    hdem = HDEM(ins.params['hdem'])
-    # if 'gdef' in ins.params: hdem.Crop(GDEF(ins.params['gdef']))
+
+    dem = None
+    gd = None
+    if 'hdem' in ins.params: 
+        dem = HDEM(relpath(ins.params['hdem']))
+        # if 'gdef' in ins.params: hdem.Crop(GDEF(relpath(ins.params['gdef'])))
+        gd = dem.gd
+    else: #if 'dem' in ins.params: 
+        print(' loading', ins.params['dem'])
+        gd = GDEF(relpath(ins.params['gdef']))
+        dem = REAL(relpath(ins.params['dem']), gd, np.float32)
+    
     print(' loading', ins.params['sg'])
-    sg = INDX(ins.params['sg'], hdem.gd).x # must be the same grid definition
+    sg = INDX(relpath(ins.params['sg']), gd).x # must be the same grid definition
     sg = surfgeo_OGS.convertOGStoRelativeK(sg) # converts OGS surficial geology index to relative permeabilities
     print(' loading', ins.params['lu'])
-    lu = INDX(ins.params['lu'], hdem.gd).x # must be the same grid definition
+    lu = INDX(relpath(ins.params['lu']), gd).x # must be the same grid definition
 
 
 
@@ -67,7 +87,7 @@ def HBV(ins):
     # if not met.lc == 0: print(" *** ERROR *** model builder only supports grid-based met files")
     # if not os.path.exists(mmio.removeExt(ins.params['met'])+'.gdef'): print(" *** ERROR *** model builder cannot locate GDEF for loaded grid-based met file")
     # metgd = GDEF(mmio.removeExt(ins.params['met'])+'.gdef')
-    # mdlgd = hdem.gd
+    # mdlgd = gd
     # met.cropToExtent(metgd, mdlgd, 10000.0)
     # met.convertToLatLng()    
 
@@ -75,11 +95,11 @@ def HBV(ins):
     # build subwatersheds
     sel = None
     if 'cid0' in ins.params: sel = int(ins.params['cid0'])
-    if 'selwshd' in ins.params: sel = set(ascii.readInts(ins.params['selwshd']))
+    if 'selwshd' in ins.params: sel = set(ascii.readInts(relpath(ins.params['selwshd'])))
     if 'swsids' in ins.params: sel = set(ins.params['swsids'])
     lu = {k: solris3.xr(v) for k, v in lu.items()}
     sg = {k: surfgeo_OGS.xr(v) for k, v in sg.items()}
-    wshd = Watershed(ins.params['wshd'], hdem, sel)
+    wshd = Watershed(relpath(ins.params['wshd']), dem, sel)
     hrus = hru.HRU(wshd,lu,sg,params.hru_minf,params.hru_min_lakef).hrus
 
 
