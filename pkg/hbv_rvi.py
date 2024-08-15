@@ -99,8 +99,10 @@ def write(root, nam, builder, ver, dtb, dte, intvl):
         f.write(':LateralEquilibrate RAVEN_DEFAULT LandHRUs SLOW_RESERVOIR 1.0 INTERBASIN\n')
         f.write(':EvaluationMetrics KLING_GUPTA NASH_SUTCLIFFE PCT_BIAS\n')
 
+        f.write('\n# output recharge\n')
         # f.write('\n:WriteNetCDFFormat\n')
         f.write(':CustomOutput MONTHLY AVERAGE To:SLOW_RESERVOIR BY_HRU\n') # monthly recharge by hru
+        f.write(':CustomOutput DAILY AVERAGE To:SLOW_RESERVOIR BY_BASIN\n') # daily recharge by sub watershed
 
         # :SilentMode
         # :SuppressOutput
