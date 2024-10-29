@@ -17,21 +17,36 @@ def write(root, nam, desc, builder, ver, wshd, hrus, par):
 
         f.write('####\n')
         f.write(':SubBasins\n')
-        f.write(' :Attributes           NAME  DOWNSTREAM_ID        PROFILE   REACH_LENGTH    GAUGED\n')
-        f.write(' :Units                none           none           none             km      none\n')
+        f.write(' :Attributes                            NAME  DOWNSTREAM_ID        PROFILE   REACH_LENGTH    GAUGED\n')
+        f.write(' :Units                                 none           none           none             km      none\n')
         for usid,h in hrus.items():
             dsid = -1
             if usid in wshd.t: dsid = wshd.t[usid]
             if not dsid in hrus: dsid = -1
-            if h=="lake":
-                f.write('  {:<10}{:>15}{:15}{:>15}{:>15}{:10}\n'.format(usid,"s"+str(usid),dsid,'default_trap','ZERO-',0))
+
+            # gauged?
+            gag = 0
+            if len(wshd.gag)>0: 
+                if len(wshd.gag[usid])>0: gag = 1
+
+            # watershed name
+            if len(wshd.nam)==0:
+                nam = 's'+str(usid)
             else:
-                f.write('  {:<10}{:>15}{:15}{:>15}{:15.3f}{:10}\n'.format(usid,"s"+str(usid),dsid,'default_trap',wshd.s[usid].rchlen,0))
+                if len(wshd.gag[usid])>0:
+                    nam = wshd.gag[usid]
+                else:
+                    nam = wshd.nam[usid].replace(' ','_')+'_'+str(usid)
+
+            if h=="lake":
+                f.write('  {:<10}{:>32}{:15}{:>15}{:>15}{:10}\n'.format(usid,nam,dsid,'default_trap','ZERO-',gag))
+            else:
+                f.write('  {:<10}{:>32}{:15}{:>15}{:15.3f}{:10}\n'.format(usid,nam,dsid,'default_trap',wshd.s[usid].rchlen,gag))
         # tt = set()
         # for usid,dsid in wshd.t.items():
         #     if dsid<=0: continue
         #     tt.add(usid)
-        #     f.write('  {:<10}{:>15}{:15}{:>15}{:15.3f}{:10}\n'.format(usid,"s"+str(usid),dsid,'default_trap',wshd.s[usid].rchlen,0))
+        #     f.write('  {:<10}{:>15}{:15}{:>15}{:15.3f}{:10}\n'.format(usid,nam,dsid,'default_trap',wshd.s[usid].rchlen,0))
         # for t in wshd.xr:
         #     if t in tt: continue
         #     f.write('  {:<10}{:>15}{:15}{:>15}{:15.3f}{:10}\n'.format(t,"s"+str(t),-1,'default_trap',wshd.s[t].rchlen,1))
@@ -79,7 +94,6 @@ def write(root, nam, desc, builder, ver, wshd, hrus, par):
             f.write(':PopulateHRUGroup LakeHRUs With LANDUSE EQUALS LAKE\n\n')
             f.write('# create HRU group for non-lake HRUs\n')
             f.write(':PopulateHRUGroup LandHRUs With LANDUSE NOTEQUALS LAKE\n\n')
-
             f.write(':RedirectToFile {}-lakes.rvh\n\n'.format(nam))
             lakes_rvh.write(root, nam, desc, builder, ver, wshd, hrus, dlakes)
 
@@ -88,9 +102,13 @@ def write(root, nam, desc, builder, ver, wshd, hrus, par):
             f.write(':EndSubBasinGroup\n\n')
 
             f.write(':PopulateSubBasinGroup AllLandSubbasins With SUBBASINS NOTWITHIN AllLakeSubbasins\n\n')
+        else:
+            f.write(':SubBasinGroup   AllLandSubbasins\n')
+            rvprint.columns(f,list(wshd.s.keys()))
+            f.write(':EndSubBasinGroup\n\n')           
 
-            f.write('# Set subbasin parameters, notes: t_conc=MAX_BAS in HBV (t_peak=t_conc/2 for HBV replication)\n')
-            f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_CONC {}\n'.format(par.MAX_BAS))
-            f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_TO_PEAK {}\n'.format(par.MAX_BAS/2))
-            f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_LAG {}\n'.format(par.TIME_LAG))
-            f.write('\n')
+        f.write('# Set subbasin parameters, notes: t_conc=MAX_BAS in HBV (t_peak=t_conc/2 for HBV replication)\n')
+        f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_CONC {}\n'.format(par.MAX_BAS))
+        f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_TO_PEAK {}\n'.format(par.MAX_BAS/2))
+        f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_LAG {}\n'.format(par.TIME_LAG))
+        f.write('\n')

@@ -65,16 +65,17 @@ def HBV(ins):
     # if writemetfiles: met.dftem = np.transpose(met.dftem, (1, 0, 2)) # re-order array axes
 
     dem = None
-    gd = None
+    gd = GDEF(relpath(ins.params['gdef']))
     if 'hdem' in ins.params: 
         dem = HDEM(relpath(ins.params['hdem']))
         # if 'gdef' in ins.params: hdem.Crop(GDEF(relpath(ins.params['gdef'])))
         gd = dem.gd
-    else: #if 'dem' in ins.params: 
+    elif 'dem' in ins.params:
         print(' loading', ins.params['dem'])
-        gd = GDEF(relpath(ins.params['gdef']))
         dem = REAL(relpath(ins.params['dem']), gd, np.float32)
-    
+    else:
+        pass
+
     print(' loading', ins.params['sg'])
     sg = INDX(relpath(ins.params['sg']), gd).x # must be the same grid definition
     sg = surfgeo_OGS.convertOGStoRelativeK(sg) # converts OGS surficial geology index to relative permeabilities
