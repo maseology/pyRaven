@@ -49,7 +49,7 @@ def write(root, nam, desc, builder, ver, met, wshd=None, writemetfiles=False):
     with open(root + nam + ".rvt","w") as f:
         f.write('# --------------------------------------------\n')
         f.write('# Raven temporal data (.rvt) file\n')
-        # f.write('# HBV-EC semi-distributed watershed model\n')
+        # f.write('# HBV-like semi-distributed watershed model\n')
         f.write('# ' + desc + '\n')
         f.write('# built from ' + met.filepath +'\n')
         f.write('# written by ' + builder + '\n')

@@ -2,11 +2,11 @@
 import time
 
 # build Primary Input file (.rvi)
-def write(root, nam, builder, ver, dtb, dte, intvl):
+def write(root, nam, builder, ver, dtb, dte, res, intvl, preciponly, silentmode=False):
     with open(root + nam + ".rvi","w") as f:
         f.write('# -------------------------------------------------------\n')
         f.write('# Raven Input (.rvi) file\n')
-        f.write('# HBV-EC semi-distributed watershed model\n')
+        f.write('# HBV semi-distributed watershed model\n')
         f.write('# written by ' + builder + '\n')
         f.write('# using pyRaven builder\n')
         f.write('# Raven version: ' + ver + '\n')
@@ -31,8 +31,11 @@ def write(root, nam, builder, ver, dtb, dte, intvl):
         f.write(':Routing              ROUTE_HYDROLOGIC\n')
         # :Method
         f.write(':InterpolationMethod  INTERP_NEAREST_NEIGHBOR\n') # INTERP_NEAREST_NEIGHBOR is default
-        f.write(':RainSnowFraction     RAINSNOW_DATA\n')
-        f.write(':PotentialMeltMethod  POTMELT_HBV\n')
+        if preciponly:
+            f.write(':RainSnowFraction     RAINSNOW_HBV\n')
+        else:
+            f.write(':RainSnowFraction     RAINSNOW_DATA\n')
+        f.write(':PotentialMeltMethod  POTMELT_DEGREE_DAY\n')
         f.write(':Evaporation          PET_HARGREAVES_1985\n')
         f.write(':OW_Evaporation       PET_HARGREAVES_1985\n')
         # :DirectEvaporation
@@ -54,13 +57,13 @@ def write(root, nam, builder, ver, dtb, dte, intvl):
         # :LakeStorage
 
 
-        f.write('\n# HBV-EC reservoir aliases\n')
+        f.write('\n# HBV reservoir aliases\n')
         f.write(':Alias                FAST_RESERVOIR SOIL[1]\n')
         f.write(':Alias                SLOW_RESERVOIR SOIL[2]\n')
         f.write(':LakeStorage          SLOW_RESERVOIR\n')
 
 
-        f.write('\n# hydrologic process order for HBV-EC emulation\n')
+        f.write('\n# hydrologic process order for HBV emulation\n')
         f.write(':HydrologicProcesses    #  ALGORITHM            ProcessFrom      ProcessTo\n') 
         #  The state variables SURFACE_WATER, PONDED_WATER, ATMOS_PRECIP and ATMOSPHERE are automatically included in all models
         #  MULTIPLE tag is a placeholder, indicating that there are more than one compartments either receiving water/energy/mass, or more than one losing.
@@ -104,5 +107,10 @@ def write(root, nam, builder, ver, dtb, dte, intvl):
         f.write(':CustomOutput MONTHLY AVERAGE To:SLOW_RESERVOIR BY_HRU\n') # monthly recharge by hru
         f.write(':CustomOutput DAILY AVERAGE To:SLOW_RESERVOIR BY_BASIN\n') # daily recharge by sub watershed
 
-        # :SilentMode
-        # :SuppressOutput
+        if res is not None:
+            f.write('\n# output reservoir mass balance\n')
+            f.write(':WriteReservoirMBFile\n')
+
+        if silentmode:
+            f.write('\n:SilentMode\n')
+            f.write(':SuppressOutput\n')

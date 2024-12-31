@@ -1,7 +1,7 @@
 
 
 # build Time Series Input file (.rvt)
-def write(root, nam, desc, builder, ver, met):
+def write(root, nam, desc, builder, ver, met, preciponly):
     with open(root + nam + ".rvt","w") as f:
         f.write('# --------------------------------------------\n')
         f.write('# Raven temporal data (.rvt) file\n')
@@ -17,8 +17,12 @@ def write(root, nam, desc, builder, ver, met):
         f.write(' :Elevation {}\n'.format(250))
         f.write(' :MultiData\n')
         f.write('   {} {} {}\n'.format(met.dtb.strftime("%Y-%m-%d %H:%M:%S"), 1, len(met.dftem.index)))
-        f.write(' :Parameters  TEMP_MAX  TEMP_MIN  RAINFALL  SNOWFALL\n') # *** wbdc ordered ***
-        f.write(' :Units              C         C      mm/d      mm/d\n')
+        if preciponly:
+            f.write(' :Parameters  TEMP_MAX  TEMP_MIN    PRECIP\n')
+            f.write(' :Units              C         C      mm/d\n')
+        else:
+            f.write(' :Parameters  TEMP_MAX  TEMP_MIN  RAINFALL  SNOWFALL\n') # *** wbdc ordered ***
+            f.write(' :Units              C         C      mm/d      mm/d\n')
 
         for _, row in met.dftem.iterrows():
             # NOTE: "+0"   https://stackoverflow.com/questions/11010683/how-to-have-negative-zero-always-formatted-as-positive-zero-in-a-python-string
@@ -26,6 +30,9 @@ def write(root, nam, desc, builder, ver, met):
             tn = round(row['Tn'],2)+0
             rf = row['Rf']
             sf = row['Sf']
-            f.write('            {:>10.2f}{:>10.2f}{:>10.1f}{:>10.1f}\n'.format(tx, tn, rf, sf))
+            if preciponly:
+                f.write('            {:>10.2f}{:>10.2f}{:>10.1f}\n'.format(tx, tn, rf+sf))
+            else:
+                f.write('            {:>10.2f}{:>10.2f}{:>10.1f}{:>10.1f}\n'.format(tx, tn, rf, sf))
         f.write(' :EndMultiData\n')              
         f.write(':EndGauge\n\n')

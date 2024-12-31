@@ -1,13 +1,14 @@
 
+from pyRaven.rvp_defaults import luxr, vxr, sgxr
 
 # build Classed Parameter Input file (.rvp)
-def write(root, nam, desc, builder, ver, hrus):
+def write(root, nam, desc, builder, ver, hru, par):
 
     # collect distinct IDs
     dlu = set()
     dsg = set()
     dveg = set()
-    for _,vv in hrus.items():
+    for _,vv in hru.hrus.items():
         if vv=='lake':
             dlu.add('LAKE')
             dveg.add('LAKE')
@@ -21,7 +22,7 @@ def write(root, nam, desc, builder, ver, hrus):
     with open(root + nam + ".rvp","w") as f:
         f.write('# --------------------------------------------\n')
         f.write('# Raven classed parameter file (.rvp)\n')
-        # f.write('# HEC-EC semi-distributed watershed model\n')
+        # f.write('# HEC-like semi-distributed watershed model\n')
         f.write('# ' + desc + '\n')        
         f.write('# written by ' + builder + '\n')
         f.write('# using pyRaven builder\n')
@@ -34,19 +35,19 @@ def write(root, nam, desc, builder, ver, hrus):
         f.write('# -----------------\n')
 
         f.write(':LandUseClasses\n')
-        luxr = {'TallVegetation': (0.,1.), 
-            'ShortVegetation': (0.,.1), 
-            'DenseVegetation': (0.,1.), 
-            'Forest': (0.,1.), 
-            'Agriculture': (0.,1.), 
-            'Waterbody': (0.,0.), 
-            'Urban': (.85,0.), 
-            'Swamp': (0.,.85),
-            'Marsh': (0.,.25),  
-            'Wetland': (0.,.25),  
-            'Barren': (0.,0.),               
-            'noflow': (0.,0.),
-            'LAKE': (0.,0.)}
+        # luxr = {'TallVegetation': (0.,1.), 
+        #     'ShortVegetation': (0.,.1), 
+        #     'DenseVegetation': (0.,1.), 
+        #     'Forest': (0.,1.), 
+        #     'Agriculture': (0.,1.), 
+        #     'Waterbody': (0.,0.), 
+        #     'Urban': (.85,0.), 
+        #     'Swamp': (0.,.85),
+        #     'Marsh': (0.,.25),  
+        #     'Wetland': (0.,.25),  
+        #     'Barren': (0.,0.),               
+        #     'noflow': (0.,0.),
+        #     'LAKE': (0.,0.)}
         f.write(' :Attributes                     IMPERM  FOREST_COV\n')
         f.write(' :Units                            frac        frac\n')
         # f.write('  LU_ALL    {:12}{:12}\n'.format(0.0,0.0))
@@ -54,13 +55,13 @@ def write(root, nam, desc, builder, ver, hrus):
         f.write(':EndLandUseClasses\n\n')
 
         f.write(':VegetationClasses\n')
-        vxr = {'Coniferous': (3.,4.5,5.), 
-            'Deciduous': (3.,4.5,5.), 
-            'MixedVegetation': (3.,4.5,5.), 
-            'Shrub': (1,2.5,5.), 
-            'ShortVegetation': (.5,4.5,5.),
-            'Bare': (0.,0.,.0001),
-            'LAKE': (0.,0.,0.)}
+        # vxr = {'Coniferous': (3.,4.5,5.), 
+        #     'Deciduous': (3.,4.5,5.), 
+        #     'MixedVegetation': (3.,4.5,5.), 
+        #     'Shrub': (1,2.5,5.), 
+        #     'ShortVegetation': (.5,4.5,5.),
+        #     'Bare': (0.,0.,.0001),
+        #     'LAKE': (0.,0.,0.)}
         f.write(' :Attributes                   MAX_HT   MAX_LAI  MAX_LEAF_COND\n')
         f.write(' :Units                             m      none       mm_per_s\n')        
         # f.write('  VEG_ALL  {:10}{:10}{:14}\n'.format(3.0,4.5,5.0))
@@ -103,10 +104,10 @@ def write(root, nam, desc, builder, ver, hrus):
 
 
         f.write('# global parameters:\n')
-        f.write(':GlobalParameter RAINSNOW_TEMP     0.0\n')
-        f.write(':GlobalParameter RAINSNOW_DELTA    1.1559\n')
-        f.write(':GlobalParameter SNOW_SWI          0.05\n')
-        f.write(':GlobalParameter AVG_ANNUAL_RUNOFF 350 # mm\n')
+        f.write(':GlobalParameter RAINSNOW_TEMP     {}\n'.format(par.RAINSNOW_TEMP))
+        f.write(':GlobalParameter RAINSNOW_DELTA    {}\n'.format(par.RAINSNOW_DELTA))
+        f.write(':GlobalParameter SNOW_SWI          {}\n'.format(par.SNOW_SWI))
+        f.write(':GlobalParameter AVG_ANNUAL_RUNOFF {} # mm\n'.format(par.AVG_ANNUAL_RUNOFF))
         # :GlobalParameter AIRSNOW_COEFF   0.75 #(1-x6)
         # :GlobalParameter AVG_ANNUAL_SNOW 123.3 #x5 mm
         # :GlobalParameter PRECIP_LAPSE    0.4
@@ -117,15 +118,23 @@ def write(root, nam, desc, builder, ver, hrus):
 
 
         f.write(':LandUseParameterList\n')
-        f.write(' :Parameters             MELT_FACTOR  MIN_MELT_FACTOR  HBV_MELT_FOR_CORR  REFREEZE_FACTOR  HBV_MELT_ASP_CORR\n')
-        f.write(' :Units                       mm/d/K          mm/d/K                none           mm/d/K               none\n') 
-        f.write('  [DEFAULT]                   3.1339          1.3036                 1.0              1.0            0.65836\n')
-        # f.write('  LU_ALL                _DEFAULT            _DEFAULT              0.6805            _DEFAULT            _DEFAULT\n')
+        f.write(' :Parameters           LAKE_PET_CORR  MELT_FACTOR  REFREEZE_FACTOR\n')
+        f.write(' :Units                         none       mm/d/K           mm/d/K\n') 
+        f.write('  [DEFAULT] {:24} {:12} {:16}\n'.format(par.LAKE_PET_CORR, par.MELT_FACTOR, par.REFREEZE_FACTOR))
         for l in dlu: 
             if l == 'Urban':
-                f.write('  {:25}      3.5             1.3                 1.0              0.5           _DEFAULT\n'.format(l))
+                f.write('  {:25} _DEFAULT          3.5              0.5\n'.format(l))
             else:
-                f.write('  {:25} _DEFAULT        _DEFAULT            _DEFAULT         _DEFAULT           _DEFAULT\n'.format(l))
+                f.write('  {:25} _DEFAULT     _DEFAULT         _DEFAULT\n'.format(l))
+        # f.write(' :Parameters             MELT_FACTOR  MIN_MELT_FACTOR  HBV_MELT_FOR_CORR  REFREEZE_FACTOR  HBV_MELT_ASP_CORR\n')
+        # f.write(' :Units                       mm/d/K          mm/d/K                none           mm/d/K               none\n') 
+        # f.write('  [DEFAULT]                   3.1339          1.3036                 1.0              1.0            0.65836\n')
+        # # f.write('  LU_ALL                _DEFAULT            _DEFAULT              0.6805            _DEFAULT            _DEFAULT\n')
+        # for l in dlu: 
+        #     if l == 'Urban':
+        #         f.write('  {:25}      3.5             1.3                 1.0              0.5           _DEFAULT\n'.format(l))
+        #     else:
+        #         f.write('  {:25} _DEFAULT        _DEFAULT            _DEFAULT         _DEFAULT           _DEFAULT\n'.format(l))
         f.write(':EndLandUseParameterList\n\n')
 
 
@@ -158,14 +167,14 @@ def write(root, nam, desc, builder, ver, hrus):
 
 
         f.write(':SoilParameterList\n')
-        sgxr = {'Low': 50., 
-            'LowMedium': 150., 
-            'Medium': 500.,
-            'MediumHigh': 1500.,
-            'High': 5000.,
-            'WetlandSediments': 100.,  
-            'Streambed': 1000.,               
-            'Unknown': 500.}
+        # sgxr = {'Low': 50., 
+        #     'LowMedium': 150., 
+        #     'Medium': 500.,
+        #     'MediumHigh': 1500.,
+        #     'High': 5000.,
+        #     'WetlandSediments': 100.,  
+        #     'Streambed': 1000.,               
+        #     'Unknown': 500.}
         sgxr.update((x, y/365.24) for x, y in sgxr.items())
         # HBV parameters:
         #   BETA: HBV_BETA
@@ -187,22 +196,3 @@ def write(root, nam, desc, builder, ver, hrus):
             f.write('  {:25} _DEFAULT        _DEFAULT       _DEFAULT       _DEFAULT             1.1216{:15.3f}         _DEFAULT           _DEFAULT        0.034432         1.9631\n'.format(s + 'FAST',sgxr[s])) 
             f.write('  {:25} _DEFAULT        _DEFAULT       _DEFAULT       _DEFAULT           _DEFAULT       _DEFAULT         _DEFAULT           _DEFAULT        0.044002       _DEFAULT\n'.format(s + 'SLOW'))        
         f.write(':EndSoilParameterList\n\n')
-
-
-
-        f.write('\n# -------------------\n')
-        f.write('# channel profile(s):\n')
-        f.write('# -------------------\n')
-
-        f.write(':ChannelProfile default_trap\n')
-        f.write(' :Bedslope 0.001\n')
-        f.write(' :SurveyPoints\n')
-        f.write('     0  5\n')
-        f.write('    55  0\n')
-        f.write('    65  0\n')
-        f.write('   120  5\n')
-        f.write(' :EndSurveyPoints\n')
-        f.write(' :RoughnessZones\n')
-        f.write('     0  0.035\n')
-        f.write(' :EndRoughnessZones\n')
-        f.write(':EndChannelProfile\n\n')  

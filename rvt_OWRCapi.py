@@ -1,32 +1,40 @@
-import os
+
 import pandas as pd
 from datetime import datetime
 from tqdm import tqdm
-from pymmio import files as mmio
-from pkg import rvt_Obs
 
 
-def getDailyAPI(fp,lat=None,lng=None,cid=None):
+def getDailyAPI(fp,preciponly,lat=None,lng=None,cid=None):
     if cid is not None:
         url = "http://fews.oakridgeswater.ca:8080/dymetp/{}".format(cid)
+        try:
+            df = pd.read_json(url)
+        except:
+            url = "http://fews.oakridgeswater.ca:8080/dymetp/{}/{}".format(lat,lng)
+            df = pd.read_json(url)        
     else:
         url = "http://fews.oakridgeswater.ca:8080/dymetp/{}/{}".format(lat,lng)
-    try:
         df = pd.read_json(url)
-    except:
-        url = "http://fews.oakridgeswater.ca:8080/dymetp/{}/{}".format(lat,lng)
-        df = pd.read_json(url)
+
     dtb = df['Date'].iloc[0]
     dte = df['Date'].iloc[-1]
     with open(fp,"w") as f:
         f.write(':MultiData\n')
         f.write(' {} {} {}\n'.format(dtb.strftime("%Y-%m-%d %H:%M:%S"), 1, len(df.index)))
-        f.write(' :Parameters  TEMP_MAX  TEMP_MIN  RAINFALL  SNOWFALL\n') # *** wbdc ordered ***
-        f.write(' :Units              C         C      mm/d      mm/d\n')
+        if preciponly:
+            f.write(' :Parameters  TEMP_MAX  TEMP_MIN    PRECIP\n')
+            f.write(' :Units              C         C      mm/d\n')
+        else:
+            f.write(' :Parameters  TEMP_MAX  TEMP_MIN  RAINFALL  SNOWFALL\n') # *** wbdc ordered ***
+            f.write(' :Units              C         C      mm/d      mm/d\n')
 
         for _, row in df.iterrows():
             # NOTE: "+0"   https://stackoverflow.com/questions/11010683/how-to-have-negative-zero-always-formatted-as-positive-zero-in-a-python-string
-            f.write('            {:>10.2f}{:>10.2f}{:>10.1f}{:>10.1f}\n'.format(round(row['Tx'],2)+0, round(row['Tn'],2)+0, row['Rf'], row['Sf']))
+            if preciponly:
+                f.write('            {:>10.2f}{:>10.2f}{:>10.1f}\n'.format(round(row['Tx'],2)+0, round(row['Tn'],2)+0, row['Rf']+row['Sf']))
+            else:
+                f.write('            {:>10.2f}{:>10.2f}{:>10.1f}{:>10.1f}\n'.format(round(row['Tx'],2)+0, round(row['Tn'],2)+0, row['Rf'], row['Sf']))       
+            
         f.write(':EndMultiData\n\n')        
     return dtb, dte
 
@@ -65,8 +73,10 @@ def writeGaugeWeightTable(root, wshd):
         f.write(':EndGaugeWeightTable\n')
 
 # build Time Series Input file (.rvt)
-def write(root, nam, desc, builder, ver, wshd, obsFP, ts, writemetfiles=False):
+def write(root, nam, desc, builder, ver, wshd, ts, preciponly=False, writemetfiles=False, submdl=False):
     writeGaugeWeightTable(root, wshd)
+    indir = 'input'
+    if submdl: indir = '..\\'+indir
     with open(root + nam + ".rvt","w") as f:
         f.write('# --------------------------------------------\n')
         f.write('# Raven temporal data (.rvt) file\n')
@@ -77,30 +87,28 @@ def write(root, nam, desc, builder, ver, wshd, obsFP, ts, writemetfiles=False):
         f.write('# Raven version: ' + ver + '\n')
         f.write('# --------------------------------------------\n\n')
 
-        mmio.mkDir(root + "input")
-        pbar = tqdm(total=len(wshd.s), desc='writing forcings')            
         for t in wshd.xr:
             s = wshd.s[t] 
             f.write(':Gauge met{}\n'.format(t))
-            f.write(' :Latitude {}\n'.format(s.ylat))
-            f.write(' :Longitude {}\n'.format(s.xlng))
-            f.write(' :Elevation {}\n'.format(s.elv))
-            f.write(' :RedirectToFile input\\m{}.rvt\n'.format(t))
+            f.write(' :Latitude  {:10.3f}\n'.format(s.ylat))
+            f.write(' :Longitude {:10.3f}\n'.format(s.xlng))
+            f.write(' :Elevation {:10.3f}\n'.format(s.elv))
+            f.write(' :RedirectToFile {}\\m{}.rvt\n'.format(indir,t))
             f.write(':EndGauge\n\n')
-            if writemetfiles: 
+
+        if writemetfiles:
+            pbar = tqdm(total=len(wshd.s), desc='writing forcings')            
+            for t in wshd.xr:
+                s = wshd.s[t] 
                 if ts==86400:
                     # getDailyAPI(lat=s.ylat, lng=s.xlng, root+'input\\m{}.rvt'.format(t))
                     # getDailyAPI(root+'input\\m{}.rvt'.format(t), cid=t)
-                    getDailyAPI(root+'input\\m{}.rvt'.format(t), lat=s.ylat, lng=s.xlng, cid=t)
+                    getDailyAPI(root+'input\\m{}.rvt'.format(t), preciponly, lat=s.ylat, lng=s.xlng) #, cid=t)
                 elif ts==21600:
+                    if preciponly:
+                        print("----------- preciponly TODO")
                     get6hourlyAPI(s.ylat, s.xlng, root+'input\\m{}.rvt'.format(t))
                 else:
                     print("rvt_OWRCapi.write WARNING: unsupported timestep {}".format(ts))
-            pbar.update()                
-        pbar.close()
-
-        if len(obsFP)>0:
-            ofp = "input\\o{}.rvt".format(mmio.getFileName(obsFP))
-            f.write(' :RedirectToFile {}\n'.format(ofp))
-            swsID = wshd.outlets()[0]
-            if not os.path.exists(ofp): rvt_Obs.writeDailyObs(obsFP, root+ofp, swsID)
+                pbar.update()                
+            pbar.close()

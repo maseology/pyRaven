@@ -6,7 +6,7 @@ from pymmio import files as mmio
 from pyMet.met import Met
 from pyGrid.hdem import HDEM
 from pyGrid.sws import Watershed
-from pkg import rvi_snowmelt, rvh_hru, rvp_OneBareLayer, rvt_OWRCapi, rvc_allZero, rvbat
+from pyRaven import batchfile, rvi_snowmelt, rvh_hru, rvp_OneBareLayer, rvt_OWRCapi, rvc_allZero
 
 
 
@@ -59,7 +59,7 @@ def BasinMelt(ins):
     rvh_hru.write(root, nam, desc, builder, ver, wshd) # HRUs    
     rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd, writemetfiles=writemetfiles) # temporal
     rvc_allZero.write(root, nam, desc, builder, ver)
-    rvbat.write(root, nam, ver)
+    batchfile.write(root, nam, ver)
 
 
     endtime = str(timedelta(seconds=round(timer() - b0,0)))

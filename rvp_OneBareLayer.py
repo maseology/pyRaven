@@ -1,7 +1,7 @@
 
 
 # build Classed Parameter Input file (.rvp)
-def write(root, nam, desc, builder, ver):
+def write(root, nam, desc, builder, ver, pars):
 
     with open(root + nam + ".rvp","w") as f:
         f.write('# --------------------------------------------\n')
@@ -44,9 +44,6 @@ def write(root, nam, desc, builder, ver):
         f.write(' :Attributes                  MAX_HT          MAX_LAI  MAX_LEAF_COND\n')
         f.write(' :Units                            m             none       mm_per_s\n')
         f.write('  VEG_ALL                        0.0              0.0            0.0\n')
-        # f.write(' :Parameters            SAI_HT_RATIO  MAX_CAPACITY  MAX_SNOW_CAPACITY  RAIN_ICEPT_FACT  SNOW_ICEPT_FACT  RAIN_ICEPT_PCT  SNOW_ICEPT_PCT\n')
-        # f.write(' :Units                         none            mm                 mm             none             none            none            none\n')
-        # f.write('  [DEFAULT]                      0.0           5.0                5.0             0.05             0.05            0.05            0.05\n')
         f.write(':EndVegetationClasses\n\n')
 
 
@@ -56,8 +53,11 @@ def write(root, nam, desc, builder, ver):
         f.write('# -----------------------\n')
 
         f.write('# global parameters:\n')
-        f.write(':GlobalParameter SNOW_SWI                0.05\n')
-        f.write(':GlobalParameter AVG_ANNUAL_RUNOFF      350.0\n')
+        f.write(':GlobalParameter SNOW_SWI             0.05\n')
+        f.write(':GlobalParameter AVG_ANNUAL_RUNOFF    250.0\n')
+        if 'global' in pars:
+            for p,v in pars['global'].items():
+                f.write(':GlobalParameter {:15s}{:15f}\n'.format(p,v))
 
         f.write('\n# class parameters:\n')
         f.write(':SoilParameterList\n')
@@ -74,3 +74,20 @@ def write(root, nam, desc, builder, ver):
         f.write(' :Units                       mm/d/K           mm/d/K\n') 
         f.write('  LU_ALL                      3.1339              1.0\n')
         f.write(':EndLandUseParameterList\n\n')
+
+        f.write(':VegetationParameterList\n')
+        f.write(' :Parameters               MAX_CAPACITY  MAX_SNOW_CAPACITY  RAIN_ICEPT_PCT  SNOW_ICEPT_PCT\n')
+        f.write(' :Units                              mm                 mm            none            none\n') 
+        f.write('  VEG_ALL                           0.0                0.0             0.0             0.0\n')
+        # f.write(' :Parameters            SAI_HT_RATIO  MAX_CAPACITY  MAX_SNOW_CAPACITY  RAIN_ICEPT_FACT  SNOW_ICEPT_FACT  RAIN_ICEPT_PCT  SNOW_ICEPT_PCT\n')
+        # f.write(' :Units                         none            mm                 mm             none             none            none            none\n')
+        # f.write('  [DEFAULT]                      0.0           5.0                5.0             0.05             0.05            0.05            0.05\n')        
+        f.write(':EndVegetationParameterList\n\n')
+
+        f.write(':SeasonalCanopyLAI\n')
+        f.write('  VEG_ALL  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0\n')
+        f.write(':EndSeasonalCanopyLAI\n\n')        
+
+          
+          
+          
