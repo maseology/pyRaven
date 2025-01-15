@@ -1,5 +1,5 @@
 
-from pyRaven.rvp_defaults import luxr, vxr, sgxr
+from pyRaven.rvp_defaults import luxr, vxr, sgxr, seasonalLAI
 
 # build Classed Parameter Input file (.rvp)
 def write(root, nam, desc, builder, ver, hru, par):
@@ -152,17 +152,7 @@ def write(root, nam, desc, builder, ver, hru, par):
 
         f.write(':SeasonalCanopyLAI\n')
         # f.write('  VEG_ALL    0.0  0.0  0.0  0.0  1.0  2.0  4.0  4.0  3.0  2.0  0.0  0.0\n')
-        for v in dveg:
-            if v == 'Bare':
-                f.write('  {:25}  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0\n'.format(v))
-            elif v == 'LAKE':
-                f.write('  {:25}  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0\n'.format(v))
-            elif v == 'Coniferous':
-                f.write('  {:25}  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0\n'.format(v))
-            elif v == 'MixedVegetation':
-                f.write('  {:25}  2.0  2.0  2.0  2.0  2.0  3.0  4.0  4.0  4.0  3.0  2.0  2.0\n'.format(v))                
-            else:
-                f.write('  {:25}  0.0  0.0  0.0  0.0  1.0  2.0  4.0  4.0  3.0  2.0  0.0  0.0\n'.format(v))
+        for v in dveg: f.write(seasonalLAI(v))
         f.write(':EndSeasonalCanopyLAI\n\n')        
 
 

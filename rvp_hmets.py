@@ -1,5 +1,5 @@
 
-from pyRaven.rvp_defaults import luxr, vxr, sgxr
+from pyRaven.rvp_defaults import luxr, vxr, sgxr, seasonalLAI
 
 # build Classed Parameter Input file (.rvp)
 def write(root, nam, desc, builder, ver, hru, par):
@@ -81,42 +81,53 @@ def write(root, nam, desc, builder, ver, hru, par):
         f.write(':GlobalParameter AVG_ANNUAL_RUNOFF {} # mm\n'.format(par.AVG_ANNUAL_RUNOFF))
 
 
-        f.write('\n# class parameters:\n')
+        f.write('\n\n# class parameters:\n')
         f.write('# -----------------------\n\n')
 
-        f.write('# HMETS (snowbal, infiltration) parameters:\n')
+        f.write('# snow balance and infiltration parameters (HMETS):\n')
         f.write(':LandUseParameterList\n')
         f.write(' :Parameters         MIN_MELT_FACTOR  MAX_MELT_FACTOR  DD_MELT_TEMP  DD_AGGRADATION  REFREEZE_FACTOR  REFREEZE_EXP  DD_REFREEZE_TEMP  HMETS_RUNOFF_COEFF\n')
         f.write(' :Units                       mm/d/K           mm/d/K             C            1/mm           mm/d/K          none                 C                none\n') 
-        f.write('  [DEFAULT] {:24}{:17}{:14}{:16}{:17}{:14}{:18}{:20}\n'.format(15.0, 18.0, 0.4, 0.1, par.REFREEZE_FACTOR, 0.6, -1.8, 0.4)) #########################################################
+        f.write('  [DEFAULT] {:24}{:17}{:14}{:16}{:17}{:14}{:18}{:20}\n'.format(par.MIN_MELT_FACTOR, par.MAX_MELT_FACTOR, par.DD_MELT_TEMP, par.DD_AGGRADATION, par.REFREEZE_FACTOR, par.REFREEZE_EXP, par.DD_REFREEZE_TEMP, par.HMETS_RUNOFF_COEFF))
         f.write(':EndLandUseParameterList\n\n')
+
 
         f.write('# routing parameters:\n')
         f.write(':LandUseParameterList\n')
-        f.write(' :Parameters           GAMMA_SHAPE  GAMMA_SCALE  GAMMA_SHAPE2  GAMMA_SCALE2\n')
-        f.write(' :Units                       none         none          none          none\n') 
-        f.write('  [DEFAULT] {:22}{:13}{:14}{:14}\n'.format(2.2, 1.6, 11.2, 0.4)) #########################################################
+        f.write(' :Parameters           LAKE_PET_CORR  GAMMA_SHAPE  GAMMA_SCALE  GAMMA_SHAPE2  GAMMA_SCALE2\n')
+        f.write(' :Units                         none         none         none          none          none\n') 
+        f.write('  [DEFAULT] {:24}{:13}{:13}{:14}{:14}\n'.format(par.LAKE_PET_CORR , par.GAMMA_SHAPE, par.GAMMA_SCALE, par.GAMMA_SHAPE2, par.GAMMA_SCALE2)) 
         f.write(':EndLandUseParameterList\n\n')
 
 
+        f.write('# interception parameters:\n')
         f.write(':VegetationParameterList\n')
-        f.write(' :Parameters            RAIN_ICEPT_PCT  SNOW_ICEPT_PCT\n')
-        f.write(' :Units                           none            none\n')
-        f.write('  [DEFAULT]                        0.0             0.0\n') #########################################################
+        # f.write(' :Parameters            RAIN_ICEPT_PCT  SNOW_ICEPT_PCT\n') # if using PRECIP_ICEPT_USER
+        # f.write(' :Units                           none            none\n')
+        # f.write('  [DEFAULT]                        0.0             0.0\n')
+        f.write(' :Parameters          RAIN_ICEPT_FACT  SNOW_ICEPT_FACT\n') # if using PRECIP_ICEPT_LAI
+        f.write(' :Units                          none             none\n')
+        f.write('  [DEFAULT] {:25}{:17}\n'.format(par.RAIN_ICEPT_FACT, par.SNOW_ICEPT_FACT))   
         # for v in dveg: 
         #     if v == 'Bare':
-        #         f.write('  {:25}      0.0           0.0\n'.format(v))
+        #         f.write('  {:25}       0.0              0.0\n'.format(v))
         #     else:
-        #         f.write('  {:25} _DEFAULT      _DEFAULT\n'.format(v))
+        #         f.write('  {:25}  _DEFAULT         _DEFAULT\n'.format(v))
         f.write(':EndVegetationParameterList\n\n')
 
+        f.write(':SeasonalCanopyLAI\n')
+        for v in dveg: f.write(seasonalLAI(v))            
+        f.write(':EndSeasonalCanopyLAI\n\n')     
 
+
+        f.write('# groundwater parameters:\n')
+        sgxr.update((x, y/365.24) for x, y in sgxr.items()) # convert from mm/yr to mm/d
         f.write(':SoilParameterList\n')
-        f.write(' :Parameters                POROSITY  PET_CORRECTION   PERC_COEFF  BASEFLOW_COEFF\n')
-        f.write(' :Units                         none            mm/d          1/d             1/d\n')
-        # f.write('  [DEFAULT]                      1.0             1.0         0.01            0.05\n')      
+        f.write(' :Parameters                 POROSITY  PET_CORRECTION   MAX_PERC_RATE  BASEFLOW_COEFF\n')
+        f.write(' :Units                          none            mm/d            mm/d             1/d\n')
+        f.write('  [DEFAULT]                       1.0             1.0             1.0{:16.3f}\n'.format(par.BASEFLOW_COEFF))      
         for s in dsg: 
             if s=='LAKE':continue
-            f.write('  {:25}      1.0{:16.3f}{:13.3f}{:16.3f}\n'.format(s + 'TOPSOIL ',1.0,0.02,0.04)) #########################################################
-            f.write('  {:25}      1.0             0.0          0.0{:16.3f}\n'.format(s + 'PHREATIC',0.007))    #########################################################
+            f.write('  {:25}  _DEFAULT        _DEFAULT{:16.3f}{:16.3f}\n'.format(s + 'TOPSOIL ',sgxr[s], par.interflow_COEFF)) 
+            f.write('  {:25}  _DEFAULT             0.0             0.0        _DEFAULT\n'.format(s + 'PHREATIC'))
         f.write(':EndSoilParameterList\n\n')

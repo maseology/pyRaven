@@ -21,7 +21,7 @@ def write(root, nam, hru, res, submdl=False):
                 f.write(":ReservoirMinStage {}\n".format(k))
                 f.write("  :AnnualCycle   {}\n".format(' '.join('{:.2f}'.format(x) for x in v.minbound)))
                 f.write(":EndReservoirMinStage\n")
-                # if v.rule is not None:
-                #     f.write(":ReservoirTargetStage {}\n".format(k))
-                #     f.write("  :AnnualCycle   {}\n".format(' '.join('{:.2f}'.format(x) for x in v.rule)))
-                #     f.write(":EndReservoirTargetStage\n")
+                if v.rule is not None:
+                    f.write(":ReservoirTargetStage {}\n".format(k))
+                    f.write("  :AnnualCycle   {}\n".format(' '.join('{:.2f}'.format(x) for x in v.rule)))
+                    f.write(":EndReservoirTargetStage\n")

@@ -1,4 +1,5 @@
 
+import math
 from pyRaven import print, rvh_lakes
 
 # build HRU/Basin Definition file (.rvh)
@@ -71,7 +72,7 @@ def writeLumped(root, nam, desc, builder, ver, wshd):
 def writeLandLake():
     pass # TODO
 
-def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprofile='NONE'):
+def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprofile=''):
     dlakes = dict()
     with open(root + nam + ".rvh","w") as f:    
         f.write('# --------------------------------------------\n')
@@ -103,24 +104,36 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
                 if len(wshd.gag[usid])>0: gag = 1
 
             # watershed name
-            if res is not None and usid in res: # watershed is reservoir
-                gag = 1
-                if len(wshd.gag[usid])>0:
-                    wnam = res[usid].name.replace(' ','_')+'_res_'+str(wshd.gag[usid])
-                else:
-                    wnam = res[usid].name.replace(' ','_')+'_res_'+str(usid)               
-            elif len(wshd.nam)==0:
-                wnam = 's'+str(usid)
-            else:
-                if len(wshd.gag[usid])>0:
-                    wnam = wshd.gag[usid]
-                else:
-                    wnam = wshd.nam[usid].replace(' ','_')+'_'+str(usid)
+            wnam = wshd.nam[usid]
+            cmnt = '' # comment
+            if len(wshd.gag[usid])>0: cmnt = '  # '+wshd.gag[usid]
+            # if res is not None and usid in res: # watershed is reservoir
+            #     gag = 1
+            #     if len(wshd.gag[usid])>0:
+            #         wnam = res[usid].name.replace(' ','_') +'_Res_'+str(wshd.gag[usid])
+            #     else:
+            #         # wnam = res[usid].name.replace(' ','_')+'_Res_'+str(usid)
+            #         wnam = res[usid].name.replace(' ','_') +'_Reservoir'
+            # elif len(wshd.nam)==0:
+            #     wnam = 's'+str(usid)
+            # else:
+            #     if len(wshd.gag[usid])>0:
+            #         wnam = wshd.nam[usid].replace(' ','_') +'_'+wshd.gag[usid]
+            #     else:
+            #         wnam = wshd.nam[usid].replace(' ','_') #+'_'+str(usid)
 
-            if h=="lake":
-                f.write('  {:<10}{:>35}{:15}{:>15}{:>15}{:10}\n'.format(usid,wnam,dsid,chanprofile,'ZERO-',gag))
+            if len(chanprofile) > 0:
+                if h=="lake":
+                    f.write('  {:<10}{:>35}{:15}{:>15}{:>15}{:10}{}\n'.format(usid,wnam,dsid,chanprofile,'ZERO-',gag,cmnt))
+                else:
+                    f.write('  {:<10}{:>35}{:15}{:>15}{:15.3f}{:10}{}\n'.format(usid,wnam,dsid,chanprofile,wshd.s[usid].rchlen,gag,cmnt))
             else:
-                f.write('  {:<10}{:>35}{:15}{:>15}{:15.3f}{:10}\n'.format(usid,wnam,dsid,chanprofile,wshd.s[usid].rchlen,gag))
+                if h=="lake":
+                    f.write('  {:<10}{:>35}{:15}{:>15}{:>15}{:10}{}\n'.format(usid,wnam,dsid,'lak_{}'.format(usid),'ZERO-',gag,cmnt))
+                else:
+                    f.write('  {:<10}{:>35}{:15}{:>15}{:15.3f}{:10}{}\n'.format(usid,wnam,dsid,'chn_{}'.format(usid),wshd.s[usid].rchlen,gag,cmnt))
+
+
         # tt = set()
         # for usid,dsid in wshd.t.items():
         #     if dsid<=0: continue
@@ -158,12 +171,13 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
         f.write('####\n')
         f.write(':HRUs\n')
         f.write(' :Attributes      AREA ELEVATION  LATITUDE LONGITUDE  BASIN_ID      LAND_USE_CLASS           VEG_CLASS        SOIL_PROFILE AQUIFER_PROFILE  TERRAIN_CLASS     SLOPE    ASPECT\n')
-        f.write(' :Units            km2         m       deg       deg      none                none                none                none            none           none       rad       rad\n')
+        f.write(' :Units            km2         m       deg       deg      none                none                none                none            none           none       deg       deg\n')
         c = 0
         # for t in wshd.xr:
         #     c += 1
         #     s = wshd.s[t]            
         #     f.write('  {:<10}{:10.3f}{:10.1f}{:10.1f}{:10.1f}{:10}         LU_ALL        VEG_ALL      DEFAULT_P          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2,s.elv,s.ylat,s.xlng,t,s.slp,s.asp))
+        def rad2deg(rad): return rad/math.pi*180.
         for t,lusg in hru.hrus.items():
             s = wshd.s[t]            
             if lusg=='lake':
@@ -175,7 +189,7 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
                 for k,frac in lusg.items():
                     c += 1
                     # f.write('  {:<10}{:10.3f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,s.elv,s.ylat,s.xlng,t,k[0][0],k[0][1],k[1],s.slp,s.asp))
-                    f.write('  {:<10}{:10.3f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,z[k][0],s.ylat,s.xlng,t,k[0][0],k[0][1],k[1],z[k][1],z[k][2]))
+                    f.write('  {:<10}{:10.3f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,z[k][0],s.ylat,s.xlng,t,k[0][0],k[0][1],k[1],rad2deg(z[k][1]),rad2deg(z[k][2])))
         f.write(':EndHRUs\n\n')
 
         # f.write('####\n')

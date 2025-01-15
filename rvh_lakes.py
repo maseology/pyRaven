@@ -12,28 +12,33 @@ def write(root, nam, desc, builder, ver, wshd, hru, hruid, res):
         f.write('# Raven version: ' + ver + '\n')
         f.write('# --------------------------------------------\n\n')
 
+        def writeWeir(t):
+            # " the preferred option for natural reservoirs." p.201
+            f.write(':Reservoir   Lake-{}  # {}\n'.format(t, wshd.nam[t]))
+            f.write('  :SubBasinID          {}\n'.format(t))
+            f.write('  :HRUID               {}\n'.format(hruid[t]))
+            f.write('  :Type RESROUTE_STANDARD\n')
+            f.write('  :WeirCoefficient      0.6\n')
+            f.write('  :CrestWidth          10.0\n')
+            f.write('  :MaxDepth            20.0\n')
+            f.write('  :LakeArea            {:.1f}\n'.format(wshd.s[t].km2*1000000))
+            # f.write('  :AbsoluteCrestHeight {:.1f}\n'.format(hru.zga[t]))  # Absolute crest height is only really needed when comparing to actual stage measurements (defaults to 0)
+            f.write(':EndReservoir\n\n')
+
         for t,lusg in hru.hrus.items():
             if lusg=='lake':
                 if res is None or not t in res:
-                    z = hru.zga[t]
-                    # " the preferred option for natural reservoirs." p.201
-                    f.write(':Reservoir   Lake-{}\n'.format(t))
-                    f.write('  :SubBasinID          {}\n'.format(t))
-                    f.write('  :HRUID               {}\n'.format(hruid[t]))
-                    f.write('  :Type RESROUTE_STANDARD\n')
-                    f.write('  :WeirCoefficient      0.6\n')
-                    f.write('  :CrestWidth          10.0\n')
-                    f.write('  :MaxDepth            20.0\n')
-                    f.write('  :LakeArea            {:.1f}\n'.format(wshd.s[t].km2*1000000))
-                    f.write('  :AbsoluteCrestHeight {:.1f}\n'.format(z))
-                    f.write(':EndReservoir\n\n')
+                    writeWeir(t)
         
         if res is not None:
             for t,r in res.items():
                 if not t in hruid: continue # needed when sub-setting model domain
                 if r.rvh is not None:
                     pass
+                elif r.minstage is None:
+                    writeWeir(t)
                 else:
+                    print('  ** WARNING: auto creation of stage-discharge needs work, consider using simple wier')
                     f.write(':Reservoir   {}\n'.format(r.name))
                     f.write('  :SubBasinID   {}\n'.format(t))
                     f.write('  :HRUID   {}\n'.format(hruid[t])) # needed for evaporation

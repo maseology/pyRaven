@@ -37,6 +37,7 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl, preciponly, silentmode=
             f.write(':RainSnowFraction     RAINSNOW_DATA\n')
         f.write(':PotentialMeltMethod  POTMELT_DEGREE_DAY\n')
         f.write(':Evaporation          PET_HARGREAVES_1985\n')
+        f.write(':PrecipIceptFract     PRECIP_ICEPT_LAI\n')
         f.write(':OW_Evaporation       PET_HARGREAVES_1985\n')
         # :DirectEvaporation
         # :OroPrecipCorrect
@@ -98,8 +99,8 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl, preciponly, silentmode=
         # f.write(':AggregatedVariable FAST_RESERVOIR AllHRUs\n') # deprecated, see LateralEquilibrate above
         # f.write(':AggregatedVariable SLOW_RESERVOIR AllHRUs\n')
         f.write(':DefineHRUGroups LandHRUs LakeHRUs\n')
-        f.write(':LateralEquilibrate RAVEN_DEFAULT LandHRUs FAST_RESERVOIR 1.0 INTERBASIN\n')
-        f.write(':LateralEquilibrate RAVEN_DEFAULT LandHRUs SLOW_RESERVOIR 1.0 INTERBASIN\n')
+        # f.write(':LateralEquilibrate RAVEN_DEFAULT LandHRUs FAST_RESERVOIR 1.0 INTERBASIN\n')
+        # f.write(':LateralEquilibrate RAVEN_DEFAULT LandHRUs SLOW_RESERVOIR 1.0 INTERBASIN\n')
         f.write(':EvaluationMetrics KLING_GUPTA NASH_SUTCLIFFE PCT_BIAS\n')
 
         f.write('\n# output recharge\n')
@@ -114,3 +115,5 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl, preciponly, silentmode=
         if silentmode:
             f.write('\n:SilentMode\n')
             f.write(':SuppressOutput\n')
+        else:
+            f.write('\n#:SilentMode\n')

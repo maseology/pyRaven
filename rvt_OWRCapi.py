@@ -72,6 +72,7 @@ def writeGaugeWeightTable(root, wshd):
             c += 1
         f.write(':EndGaugeWeightTable\n')
 
+
 # build Time Series Input file (.rvt)
 def write(root, nam, desc, builder, ver, wshd, ts, preciponly=False, writemetfiles=False, submdl=False):
     writeGaugeWeightTable(root, wshd)

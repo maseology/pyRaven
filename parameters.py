@@ -24,6 +24,27 @@ class Params:
     LAKE_PET_CORR = 1.0
     MELT_FACTOR = 3.5
     REFREEZE_FACTOR = 3.0
+    MIN_MELT_FACTOR = 15.0
+    MAX_MELT_FACTOR = 18.0
+    DD_MELT_TEMP = 0.4
+    DD_AGGRADATION = 0.1
+    REFREEZE_EXP = 0.6
+    DD_REFREEZE_TEMP = -1.8
+    HMETS_RUNOFF_COEFF = 0.4
+
+    # routing parameters
+    GAMMA_SHAPE = 2.2
+    GAMMA_SCALE = 1.6
+    GAMMA_SHAPE2 = 11.2
+    GAMMA_SCALE2 = 0.4
+
+    # interception parameters
+    RAIN_ICEPT_FACT = 0.06
+    SNOW_ICEPT_FACT = 0.04
+
+    # baseflow
+    BASEFLOW_COEFF = 0.007
+    interflow_COEFF = 0.04 # mm added
 
     def set(self, pset):
         for k,v in pset.items():

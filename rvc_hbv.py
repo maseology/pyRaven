@@ -14,8 +14,8 @@ def write(root, nam, desc, builder, ver, hru, res):
         f.write('# --------------------------------------------\n\n')
         f.write('# initial conditions\n')   
 
-        f.write(':UniformInitialConditions SOIL[0] {:>10.3f}\n'.format(1))
-        f.write(':UniformInitialConditions SOIL[1] {:>10.3f}\n'.format(1))
-        f.write(':UniformInitialConditions SOIL[2] {:>10.3f}\n'.format(1))
+        f.write(':UniformInitialConditions SOIL[0] {:>10.3f}\n'.format(.1))
+        f.write(':UniformInitialConditions SOIL[1] {:>10.3f}\n'.format(.1))
+        f.write(':UniformInitialConditions SOIL[2] {:>10.3f}\n'.format(.1))
 
     rvc_Res.write(root, nam, hru, res)

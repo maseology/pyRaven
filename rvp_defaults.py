@@ -16,14 +16,25 @@ luxr = {'TallVegetation': (0.,1.),
 
 
 # vegetation [MAX_HT, MAX_LAI, MAX_LEAF_COND]
-vxr = {'Coniferous': (3.,4.5,5.), 
-            'Deciduous': (3.,4.5,5.), 
-            'MixedVegetation': (3.,4.5,5.), 
-            'Shrub': (1,2.5,5.), 
-            'ShortVegetation': (.5,4.5,5.),
-            'Bare': (0.,0.,.0001),
+vxr = {'Coniferous': (30.,7.,5.), 
+            'Deciduous': (25.,4.5,5.3), 
+            'MixedVegetation': (25.,4.5,5.3), 
+            'Shrub': (1,1.,5.3), 
+            'ShortVegetation': (.5,4.5,5.3),
+            'Bare': (0.,0.,0.),
             'LAKE': (0.,0.,0.)}
 
+def seasonalLAI(vtyp):
+    if vtyp == 'Bare':
+        return '  {:25}  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0\n'.format(vtyp)
+    elif vtyp == 'LAKE':
+        return '  {:25}  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0\n'.format(vtyp)
+    elif vtyp == 'Coniferous':
+        return '  {:25}  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0  4.0\n'.format(vtyp)
+    elif vtyp == 'MixedVegetation':
+        return '  {:25}  2.0  2.0  2.0  2.0  2.0  3.0  4.0  4.0  4.0  3.0  2.0  2.0\n'.format(vtyp)
+    else:
+        return '  {:25}  0.0  0.0  0.0  0.0  1.0  2.0  4.5  4.5  3.0  2.0  0.0  0.0\n'.format(vtyp)
 
 # soils k [mm/yr]
 sgxr = {'Low': 50., 

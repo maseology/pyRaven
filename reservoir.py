@@ -6,7 +6,7 @@ class Res:
 
     rvh = None
 
-    def __init__(self, hid, nam, minstage, maxstage, fp=None):
+    def __init__(self, hid, nam, minstage=None, maxstage=None, fp=None):
         _, file_extension = os.path.splitext(fp)
 
         self.hruid = hid
