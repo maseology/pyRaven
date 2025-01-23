@@ -29,7 +29,7 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl, preciponly, calibration
             f.write(':RainSnowFraction     RAINSNOW_DATA\n')
         f.write(':Evaporation          PET_HARGREAVES_1985\n')
         f.write(':PrecipIceptFract     PRECIP_ICEPT_LAI\n')
-        f.write(':InterpolationMethod  INTERP_FROM_FILE  {}\n'.format(root + nam + "-GaugeWeightTable.txt"))
+        f.write(':InterpolationMethod  INTERP_FROM_FILE  {}\n'.format(nam + "-GaugeWeightTable.txt"))
         f.write(':CatchmentRoute       ROUTE_GAMMA_CONVOLUTION\n')
         f.write(':Routing              ROUTE_DIFFUSIVE_WAVE\n\n')
 

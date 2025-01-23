@@ -52,7 +52,7 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl, preciponly, silentmode=
         # :RelativeHumidityMethod
         # :AirPressureMethod 
         f.write(':PrecipIceptFract     PRECIP_ICEPT_USER\n')
-        f.write(':InterpolationMethod  INTERP_FROM_FILE  {}\n'.format(root + nam + "-GaugeWeightTable.txt"))
+        f.write(':InterpolationMethod  INTERP_FROM_FILE  {}\n'.format(nam + "-GaugeWeightTable.txt"))
         # :PotentialMelt
         # :MonthlyInterpolationMethod
         # :SubDailyMethod
