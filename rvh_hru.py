@@ -170,14 +170,14 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
         # ASPECT:          HRU mean aspect, in degrees. Northern:0°, western: 90°, southern: 180°, eastern: 270°. 
         f.write('####\n')
         f.write(':HRUs\n')
-        f.write(' :Attributes      AREA ELEVATION  LATITUDE LONGITUDE  BASIN_ID      LAND_USE_CLASS           VEG_CLASS        SOIL_PROFILE AQUIFER_PROFILE  TERRAIN_CLASS     SLOPE    ASPECT\n')
-        f.write(' :Units            km2         m       deg       deg      none                none                none                none            none           none       deg       deg\n')
+        f.write(' :Attributes      AREA ELEVATION  LATITUDE LONGITUDE  BASIN_ID      LAND_USE_CLASS           VEG_CLASS        SOIL_PROFILE AQUIFER_PROFILE  TERRAIN_CLASS     SLOPE    ASPECT\n') # aspect deg CCWN (west=90°)
+        f.write(' :Units            km2         m       deg       deg      none                none                none                none            none           none       deg      degN\n')
         c = 0
         # for t in wshd.xr:
         #     c += 1
         #     s = wshd.s[t]            
         #     f.write('  {:<10}{:10.3f}{:10.1f}{:10.1f}{:10.1f}{:10}         LU_ALL        VEG_ALL      DEFAULT_P          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2,s.elv,s.ylat,s.xlng,t,s.slp,s.asp))
-        def rad2deg(rad): return rad/math.pi*180.
+        def rad2deg(rad): return (rad/math.pi*180.) % 360
         for t,lusg in hru.hrus.items():
             s = wshd.s[t]            
             if lusg=='lake':
@@ -189,7 +189,7 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
                 for k,frac in lusg.items():
                     c += 1
                     # f.write('  {:<10}{:10.3f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,s.elv,s.ylat,s.xlng,t,k[0][0],k[0][1],k[1],s.slp,s.asp))
-                    f.write('  {:<10}{:10.3f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,z[k][0],s.ylat,s.xlng,t,k[0][0],k[0][1],k[1],rad2deg(z[k][1]),rad2deg(z[k][2])))
+                    f.write('  {:<10}{:10.3f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,z[k][0],s.ylat,s.xlng,t,k[0][0],k[0][1],k[1],rad2deg(z[k][1]),rad2deg(z[k][2]-math.pi/2)))
         f.write(':EndHRUs\n\n')
 
         # f.write('####\n')

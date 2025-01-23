@@ -122,7 +122,7 @@ def __semidistributedCollect(ins, xrlu, xrsg):
 
 
     # build subwatersheds
-    print("\n=== Building subbasins, HRUs, from land use and surficial geology..")
+    print("\n=== Building sub-basins, HRUs, from land use and surficial geology..")
     sel = None
     if 'cid0' in ins.params: sel = int(ins.params['cid0'])
     if 'selwshd' in ins.params: sel = set(ascii.readInts(relpath(ins.params['selwshd'])))
@@ -138,7 +138,12 @@ def __semidistributedCollect(ins, xrlu, xrsg):
             sel.update(wshd.climb(k))
         wshd = wshd.subset(list(sel))
         print(' for calibration mode, model reduced from {} to {} subbasins'.format(norig,len(wshd.xr)))
+    # else:
+    #     mmio.mkDir(root0+nam+'-rasters')
+    #     gd.saveBinaryInt(root0+nam+'-rasters/'+nam+'-ilu.bil',lu)
+    #     gd.saveBinaryInt(root0+nam+'-rasters/'+nam+'-isg.bil',sg)
     hrus = hru.HRU(wshd,lu,sg,params.hru_minf,params.hru_min_lakef,dem,xrlu.default(),xrsg.default())
+
 
     # compile subbasin land use stats
     for t in wshd.xr:
@@ -156,6 +161,9 @@ def __semidistributedCollect(ins, xrlu, xrsg):
 
     # make directories   
     mmio.mkDir(root)
+
+    # print misc files
+    if not calibrationmode: hrus.buildHRUidBil(root0+nam+'/',nam, gd, wshd) # outputs an HRU id cross-referencing raster
 
     return root0, root, nam, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, writemetfiles, preonly, calibrationmode
 

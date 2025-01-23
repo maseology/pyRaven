@@ -1,4 +1,4 @@
-
+import os
 import numpy as np
 import math
 
@@ -6,6 +6,7 @@ class HRU:
 
     def __init__(self, wshd, lulu, sglu, minf, lakf, hdem, defaultLU, defaultSG):
         self.hrus = dict() # swsid: (lu,sg): frac
+        self.cells = dict() # cid: (lu,sg)
         self.zga = dict() # swsid: (lu,sg): (elev,slopeangle,aspect)
 
         zc, gc, ac = dict(), dict(), dict()
@@ -28,6 +29,7 @@ class HRU:
                 if c in lulu: ll = lulu[c]
                 if c in sglu: gg = sglu[c]                
                 t = (ll,gg)
+                self.cells[c] = t
 
                 if zc[c]>-999:
                     if t in d: 
@@ -67,7 +69,7 @@ class HRU:
                     if v/n > minf: 
                         dd[t] = v/n
                         dn += v/n
-                        if gn[t]==0:
+                        if not t in gn or gn[t]==0:
                             sa[t] = (float(z[t]/v),0.,0.)
                         else:
                             gg = math.atan(g[t]/gn[t]) # rad
@@ -79,5 +81,34 @@ class HRU:
                 self.hrus[sid] = dd
                 self.zga[sid] = sa
                 cc += len(dd)
-
+        self.nhru = cc
         print(' {} distinct HRUs'.format(cc))
+
+
+    def buildHRUidBil(self, dir, nam, gd, wshd):
+        # if os.path.exits(dir+nam+'-hruid.bil'): return
+        d = dict()
+        tt = dict()
+        c = 0
+        for sid,lusg in self.hrus.items():
+            if lusg=='lake':
+                c+=1
+                for cid in wshd.xr[sid]: d[cid] = c
+            else:
+                tt[sid] = dict()
+                for t,_ in lusg.items():
+                    c+=1
+                    tt[sid][t] = c
+
+        for sid,cids in wshd.xr.items():
+            # for c in cids:
+            #     d[c]=c
+            if not sid in tt: continue
+            for c in cids:
+                t = self.cells[c]
+                if not t in tt[sid]:
+                    d[c] = -1
+                else:
+                    d[c] = tt[sid][t]
+
+        gd.saveBinaryInt(dir+nam+'-hruid.bil',d)

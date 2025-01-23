@@ -105,9 +105,9 @@ def write(root, nam, desc, builder, ver, hru, par):
         # f.write(' :Parameters            RAIN_ICEPT_PCT  SNOW_ICEPT_PCT\n') # if using PRECIP_ICEPT_USER
         # f.write(' :Units                           none            none\n')
         # f.write('  [DEFAULT]                        0.0             0.0\n')
-        f.write(' :Parameters          RAIN_ICEPT_FACT  SNOW_ICEPT_FACT\n') # if using PRECIP_ICEPT_LAI
-        f.write(' :Units                          none             none\n')
-        f.write('  [DEFAULT] {:25}{:17}\n'.format(par.RAIN_ICEPT_FACT, par.SNOW_ICEPT_FACT))   
+        f.write(' :Parameters          RAIN_ICEPT_FACT  SNOW_ICEPT_FACT  MAX_CAPACITY  MAX_SNOW_CAPACITY\n') # if using PRECIP_ICEPT_LAI
+        f.write(' :Units                          none             none          none               none\n')
+        f.write('  [DEFAULT] {:25}{:17}{:14}{:19}\n'.format(par.RAIN_ICEPT_FACT, par.SNOW_ICEPT_FACT,par.MAX_CAPACITY, par.MAX_SNOW_CAPACITY))   
         # for v in dveg: 
         #     if v == 'Bare':
         #         f.write('  {:25}       0.0              0.0\n'.format(v))
@@ -128,6 +128,6 @@ def write(root, nam, desc, builder, ver, hru, par):
         f.write('  [DEFAULT]                       1.0             1.0             1.0{:16.3f}\n'.format(par.BASEFLOW_COEFF))      
         for s in dsg: 
             if s=='LAKE':continue
-            f.write('  {:25}  _DEFAULT        _DEFAULT{:16.3f}{:16.3f}\n'.format(s + 'TOPSOIL ',sgxr[s], par.interflow_COEFF)) 
+            f.write('  {:25}  _DEFAULT        _DEFAULT{:16.3f}{:16.3f}\n'.format(s + 'TOPSOIL ',sgxr[s], par.INTERFLOW_COEFF)) 
             f.write('  {:25}  _DEFAULT             0.0             0.0        _DEFAULT\n'.format(s + 'PHREATIC'))
         f.write(':EndSoilParameterList\n\n')

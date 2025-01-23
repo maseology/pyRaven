@@ -59,23 +59,41 @@ def get6hourlyAPI(fp,lat=None,lng=None,cid=None):
     return dtb, dte
 
 
-def writeGaugeWeightTable(root, wshd):
-    c = 0
-    n = len(wshd.xr)
-    with open(root + 'GaugeWeightTable.txt',"w") as f:
-        f.write(':GaugeWeightTable\n')
-        f.write(' {} {}\n'.format(n,n))
-        for _ in wshd.xr:
-            a = [0.] * n
-            a[c] = 1.
-            f.write(' ' + ' '.join([str(v) for v in a]) + '\n')
+def writeGaugeWeightTable(root, nam, wshd, hru):
+    def buildXR():
+        c = 0
+        xr = dict()
+        for t in wshd.xr:
+            xr[t]=c
             c += 1
+        return xr
+    xr = buildXR()
+    ng=len(hru.hrus)
+    with open(root + nam + "-GaugeWeightTable.txt","w") as f:
+        f.write(':GaugeWeightTable\n')
+        f.write(' {} {}\n'.format(ng,hru.nhru))
+        for t,a in hru.hrus.items():
+            a = [0.] * ng
+            a[xr[t]] = 1.            
+            for _ in a:
+                f.write(' ' + ' '.join([str(v) for v in a]) + '\n')
         f.write(':EndGaugeWeightTable\n')
+    # c = 0
+    # n = len(wshd.xr)
+    # with open(root + nam + "-GaugeWeightTable.txt","w") as f:
+    #     f.write(':GaugeWeightTable\n')
+    #     f.write(' {} {}\n'.format(n,n))
+    #     for _ in wshd.xr:
+    #         a = [0.] * n
+    #         a[c] = 1.
+    #         f.write(' ' + ' '.join([str(v) for v in a]) + '\n')
+    #         c += 1
+    #     f.write(':EndGaugeWeightTable\n')
 
 
 # build Time Series Input file (.rvt)
-def write(root, nam, desc, builder, ver, wshd, ts, preciponly=False, writemetfiles=False, submdl=False):
-    writeGaugeWeightTable(root, wshd)
+def write(root, nam, desc, builder, ver, wshd, hru, ts, preciponly=False, writemetfiles=False, submdl=False):
+    writeGaugeWeightTable(root, nam, wshd, hru)
     indir = 'input'
     if submdl: indir = '..\\'+indir
     with open(root + nam + ".rvt","w") as f:

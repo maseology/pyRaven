@@ -13,7 +13,7 @@ def build(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb
     rvp_hbv.write(root, nam, desc, builder, ver, hrus, params) # parameters
     rvp_channels.default_trap(root, nam)
     rvc_hbv.write(root, nam, desc, builder, ver, hrus, res) # initial conditions
-    rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd, ts, preciponly=preonly, writemetfiles=writemetfiles) # temporal forcing files
+    rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd, hrus, ts, preciponly=preonly, writemetfiles=writemetfiles) # temporal forcing files
     rvt_Obs.write(root, nam, wshd, obsFP) # temporal observation files        
     rvt_Res.write(root, nam, hrus, res)
     batchfile.write(root, nam, ver)
@@ -35,7 +35,7 @@ def buildSubmodel(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP,
         rvh_hbv.write(root, nam, desc, builder, ver, wshd2, hrus, res, params)
         rvp_hbv.write(root, nam, desc, builder, ver, hrus, params) # parameters
         rvp_channels.default_trap(root, nam)
-        rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd2, ts, preciponly=preonly, writemetfiles=writemetfiles) # temporal forcing files
+        rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd2, hrus, ts, preciponly=preonly, writemetfiles=writemetfiles) # temporal forcing files
         rvt_Obs.write(root, nam, wshd2, obsFP) # temporal observation files  
         rvc_hbv.write(root, nam, desc, builder, ver, hrus, res) # initial conditions
         rvt_Res.write(root, nam, hrus, res)            
@@ -65,7 +65,7 @@ def buildGaugedSubmodels(root0, root, nam, desc, builder, ver, wshd, hrus, res, 
         rvh_hbv.write(subroot, subnam, desc, builder, ver, wshd2, hrus, res, params)
         rvp_hbv.write(subroot, subnam, desc, builder, ver, hrus, params) # parameters
         rvp_channels.default_trap(subroot, subnam)
-        rvt_OWRCapi.write(subroot, subnam, desc, builder, ver, wshd2, ts, preciponly=preonly, writemetfiles=writemetfiles, submdl=True) # temporal forcing files)
+        rvt_OWRCapi.write(subroot, subnam, desc, builder, ver, wshd2, hrus, ts, preciponly=preonly, writemetfiles=writemetfiles, submdl=True) # temporal forcing files)
         obsFP = root0+'obs\\'+v+'.csv'
         if os.path.exists(obsFP): rvt_Obs.write(subroot, subnam, wshd2, obsFP, submdl=True)
         rvc_hbv.write(subroot, subnam, desc, builder, ver, hrus, res)   
