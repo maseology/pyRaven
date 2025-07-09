@@ -37,11 +37,12 @@ def seasonalLAI(vtyp):
         return '  {:25}  0.0  0.0  0.0  0.0  1.0  2.0  4.5  4.5  3.0  2.0  0.0  0.0\n'.format(vtyp)
 
 # soils k [mm/yr]
-sgxr = {'Low': 50., 
-            'LowMedium': 150., 
+sgxr = {'Low': 150., #50., 
+            'LowMedium': 300., #150., 
             'Medium': 500.,
-            'MediumHigh': 1500.,
-            'High': 5000.,
+            'MediumHigh': 700., #1500.,
+            'High': 900., #5000.,
             'WetlandSediments': 100.,  
-            'Streambed': 1000.,               
-            'Unknown': 500.}
+            'Streambed': 400., #1000.,               
+            'Unknown': 1000.
+        }

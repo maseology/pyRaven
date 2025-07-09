@@ -1,5 +1,6 @@
 
-import os, shutil
+import os
+import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from timeit import default_timer as timer
@@ -9,7 +10,8 @@ from pyGrid.indx import INDX
 from pyGrid.real import REAL
 from pyGrid.hdem import HDEM, tec
 from pyGrid.sws import Watershed
-from pyRaven import hru, buildHMETS, buildHBV_OWRC, parameters, reservoir
+from pyRaven import buildHBV, buildHMETS, hru, ostrich_HBV, ostrich_HMETS, parameters, reservoir
+from pyRaven.flags import flg
 
 def __semidistributedCollect(ins, xrlu, xrsg):
     # paths and notes
@@ -20,7 +22,10 @@ def __semidistributedCollect(ins, xrlu, xrsg):
     builder = 'M. Marchildon ' + now.strftime("%Y-%m-%d %H:%M:%S")
     ver = "3.8"
 
+
+    #################################
     # functions
+    #################################
     def isCalib():
         if 'options' in ins.params:
             if 'calibrationmode' in ins.params['options']:
@@ -34,6 +39,7 @@ def __semidistributedCollect(ins, xrlu, xrsg):
         return root0 + nam + ins.sfx + "\\", False
     
     def relpath(fp):
+        fp = fp.replace('"','')
         if os.path.exists(fp): return fp
         if not os.path.exists(root0+fp): 
             print('error: file not found: '+fp)
@@ -42,28 +48,35 @@ def __semidistributedCollect(ins, xrlu, xrsg):
             return root0+fp
         
 
-    # options
-    root, calibrationmode = isCalib()
+
+    #################################
+    # read model control file
+    #  collect simulation options
+    #################################
+    root, flg.calibrationmode = isCalib()
     params = parameters.Params()
     ts = 86400
+    epsg = 3161
+    aggregateHRUs = True
     dtb = ins.params['dtb']
     dte = ins.params['dte']
     obsFP = ""
     res = None
-    preonly=False
-    writemetfiles = not os.path.exists(root + "input")
+    flg.writemetfiles = not os.path.exists(root + "input")
     if 'timestep' in ins.params: ts = int(ins.params['timestep'])
-    if 'obsfp' in ins.params: obsFP = ins.params['obsfp']
+    if 'obsfp' in ins.params: obsFP = relpath(ins.params['obsfp'])
     if len(obsFP)==0 and os.path.isdir(root0+'obs'): obsFP=root0+'obs' # setting default observation directory
     if 'options' in ins.params:
         if 'overwritetemporalfiles' in ins.params['options']:
-            writemetfiles = ins.params['options']['overwritetemporalfiles']      
+            flg.writemetfiles = ins.params['options']['overwritetemporalfiles']      
         if 'minhrufrac' in ins.params['options']:
             params.hru_minf = float(ins.params['options']['minhrufrac'])
         if 'lakehruthresh' in ins.params['options']:
             params.hru_min_lakef = float(ins.params['options']['lakehruthresh'])            
         if 'preciponly' in ins.params['options']: 
-            preonly=True
+            flg.preciponly=True
+        if 'skiphruaggregation' in ins.params['options']: # Lumps all small HRUs (<hru_minf) into 1 mega HRU; otherwise aggregates small HRUs into generalized HRU sub-groups (will create greater number of HRUs) 
+            aggregateHRUs = False
     if 'parameters' in ins.params: # get parameters
         params.set(ins.params['parameters'])
     if 'reservoirs' in ins.params: # get reservoirs
@@ -79,10 +92,12 @@ def __semidistributedCollect(ins, xrlu, xrsg):
            
 
 
+    #################################
     # load data
+    #################################
     print("\n=== Loading data..")
-    # met = Met(ins.params['met'], skipdata = not writemetfiles)
-    # if writemetfiles: met.dftem = np.transpose(met.dftem, (1, 0, 2)) # re-order array axes
+    # met = Met(ins.params['met'], skipdata = not flg.writemetfiles)
+    # if flg.writemetfiles: met.dftem = np.transpose(met.dftem, (1, 0, 2)) # re-order array axes
 
     dem = None
     gd = GDEF(relpath(ins.params['gdef']))
@@ -96,10 +111,12 @@ def __semidistributedCollect(ins, xrlu, xrsg):
         g,a = dem.slopeAspectTarboton()
         tem = dict()
         for c, z in dem.x.items():
-            i,j = dem.gd.crc[c]
-            cc = dem.gd.cco[i][j]
-            tem[c] = tec(cc[0],cc[1],z,g[c],a[c])
+            if c in dem.gd.crc:
+                i,j = dem.gd.crc[c]
+                cc = dem.gd.cco[i][j]
+                tem[c] = tec(cc[0],cc[1],z,g[c],a[c])
         dem = HDEM()
+        gd.setActives(list(tem.keys()))
         dem.gd = gd
         dem.tem = tem
     else:
@@ -121,7 +138,11 @@ def __semidistributedCollect(ins, xrlu, xrsg):
     # met.convertToLatLng()    
 
 
+
+
+    #################################
     # build subwatersheds
+    #################################
     print("\n=== Building sub-basins, HRUs, from land use and surficial geology..")
     sel = None
     if 'cid0' in ins.params: sel = int(ins.params['cid0'])
@@ -129,8 +150,18 @@ def __semidistributedCollect(ins, xrlu, xrsg):
     if 'swsids' in ins.params: sel = set(ins.params['swsids'])       
     lu = {k: xrlu.xr(v) for k, v in lu.items()}
     sg = {k: xrsg.xr(v) for k, v in sg.items()}
-    wshd = Watershed(relpath(ins.params['wshd']), dem, sel)
-    if calibrationmode:
+    wshd = Watershed(relpath(ins.params['wshd']), dem, sel, epsg)
+    if len(obsFP)>0 and not os.path.isdir(obsFP):
+        df = pd.read_csv(obsFP)
+        if not "Date" in df.columns and "SubId" in df.columns: 
+            # special case: when observation file is not a hydrograph, rather an index of SubIds and listed .rvt files
+            # created using E:\Sync\@dev\go\src\test\rdrr-to-raven-input\main.go
+            gagdict = dict(zip(df.SubId,df.name))
+            for k,v in gagdict.items():
+                if k in wshd.gag: 
+                    wshd.gag[k]=v
+            obsFP=mmio.removeExt(obsFP)
+    if flg.calibrationmode:
         norig = len(wshd.xr)
         sel = set()
         for k,v in wshd.gag.items():
@@ -142,7 +173,7 @@ def __semidistributedCollect(ins, xrlu, xrsg):
     #     mmio.mkDir(root0+nam+'-rasters')
     #     gd.saveBinaryInt(root0+nam+'-rasters/'+nam+'-ilu.bil',lu)
     #     gd.saveBinaryInt(root0+nam+'-rasters/'+nam+'-isg.bil',sg)
-    hrus = hru.HRU(wshd,lu,sg,params.hru_minf,params.hru_min_lakef,dem,xrlu.default(),xrsg.default())
+    hrus = hru.HRU(wshd,lu,sg,params.hru_minf,params.hru_min_lakef,dem,xrlu.default(),xrsg.default(),epsg,aggregateHRUs)
 
 
     # compile subbasin land use stats
@@ -156,20 +187,20 @@ def __semidistributedCollect(ins, xrlu, xrsg):
                 case "ShortVegetation" | "Forest" | "Swamp": nn+=1
                 case _: nk+=1 # Barren, Waterbody, noflow
         n=(na+nn+nu+nk)/100
-        if n>0: wshd.info[t] = 'Ag{:2.0f}%; Nat{:2.0f}%; Urb{:2.0f}%'.format(na/n,nn/n,nu/n)
+        if n>0: wshd.info[t] = (na/n,nn/n,nu/n) # 'Ag{:2.0f}%; Nat{:2.0f}%; Urb{:2.0f}%'.format(na/n,nn/n,nu/n)
 
 
     # make directories   
     mmio.mkDir(root)
 
     # print misc files
-    if not calibrationmode: hrus.buildHRUidBil(root0+nam+'/',nam, gd, wshd) # outputs an HRU id cross-referencing raster
+    # if flg.calibrationmode: 
+    hrus.writeHRUidBil(root,nam, gd, wshd) # outputs an HRU id cross-referencing raster
 
-    return root0, root, nam, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, writemetfiles, preonly, calibrationmode
+    return root0, root, nam, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte
 
 
-
-# the simple HMETS model (as built by ORMGP)
+# the simple HMETS model (as built by ORMGP for application in southern Ontario, Canada)
 # Martel, J., Demeester, K., Brissette, F., Poulin, A., Arsenault, R., 2017. HMETS - a simple and efficient hydrology model for teaching hydrological modelling, flow forecasting and climate change impacts to civil engineering students. International Journal of Engineering Education 34, 1307–1316.
 def HMETS_OWRC(ins, xrlu, xrsg):
 
@@ -181,27 +212,33 @@ def HMETS_OWRC(ins, xrlu, xrsg):
     if len(desc) > 0: print(desc) #"\n{}\n".format(desc))
     b0 = timer()
 
-    root0, root, nam, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, writemetfiles, preonly, calibrationmode = __semidistributedCollect(ins, xrlu, xrsg)
+    root0, root, nam, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte = __semidistributedCollect(ins, xrlu, xrsg)
 
     print("\n\n=== Writing control files..")
     if 'submodel' in ins.params['options']:
         outsb = ins.params['options']['submodel']
-        buildHMETS.buildSubmodel(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, writemetfiles, preonly, calibrationmode, outsb)
+        buildHMETS.buildSubmodel(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, outsb)
     elif 'gaugedsubmodels' in ins.params['options']:
-        buildHMETS.buildGaugedSubmodels(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, writemetfiles, preonly, calibrationmode)
+        buildHMETS.buildGaugedSubmodels(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte)
     else:
-        buildHMETS.build(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, writemetfiles, preonly, calibrationmode)
+        buildHMETS.build(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte)
 
     # Copy Ostrich files and templates
-    if calibrationmode: 
-        print('copying Ostrich templates..')
-        shutil.copytree('E:/Sync/@dev/Raven-bin/Ostrich_HMETS', root0 + nam + ins.sfx + "_CALIB\\", dirs_exist_ok=True)
+    if flg.calibrationmode: 
+        print('\n writing Ostrich templates..')
+        # shutil.copytree('E:/Sync/@dev/Raven-bin/Ostrich_HMETS', root0 + nam + ins.sfx + "_CALIB\\", dirs_exist_ok=True)
+        ostrich_HMETS.writeDDS(root0 + nam + ins.sfx + "_CALIB\\", nam, wshd, hrus, res)
+
 
     endtime = str(timedelta(seconds=round(timer() - b0,0)))
     print('\ntotal elapsed time: ' + endtime)
 
 
 
+
+
+
+# the HBV model (as built by ORMGP for application in southern Ontario, Canada)
 def HBV_OWRC(ins, xrlu, xrsg, sfx=''):
 
     stmsg = "=== Raven HBV-OWRC builder ==="
@@ -212,20 +249,22 @@ def HBV_OWRC(ins, xrlu, xrsg, sfx=''):
     if len(desc) > 0: print(desc) #"\n{}\n".format(desc))
     b0 = timer()
 
-    root0, root, nam, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, writemetfiles, preonly, calibrationmode = __semidistributedCollect(ins, xrlu, xrsg)
+    root0, root, nam, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte = __semidistributedCollect(ins, xrlu, xrsg)
 
     print("\n\n=== Writing control files..")
     if 'submodel' in ins.params['options']:
         outsb = ins.params['options']['submodel']
-        buildHBV_OWRC.buildSubmodel(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, writemetfiles, preonly, calibrationmode, outsb)
+        buildHBV.buildSubmodel(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, outsb)
     elif 'gaugedsubmodels' in ins.params['options']:
-        buildHBV_OWRC.buildGaugedSubmodels(root0, root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, writemetfiles, preonly, calibrationmode)
+        buildHBV.buildGaugedSubmodels(root0, root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte)
     else:
-        buildHBV_OWRC.build(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte, writemetfiles, preonly, calibrationmode)
+        buildHBV.build(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte)
 
-    if calibrationmode:
-        print(' ** TODO: copy all Ostrich files **')
-
+    # Copy Ostrich files and templates
+    if flg.calibrationmode: 
+        print('\n writing Ostrich templates..')
+        ostrich_HBV.writeDDS(root0 + nam + ins.sfx + "_CALIB\\", nam, wshd, hrus, res)
+        
     endtime = str(timedelta(seconds=round(timer() - b0,0)))
     print('\ntotal elapsed time: ' + endtime)
 

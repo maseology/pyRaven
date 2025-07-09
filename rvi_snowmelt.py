@@ -1,7 +1,8 @@
 
+from pyRaven.flags import flg
 
 # build Primary Input file (.rvi)
-def write(root, nam, builder, ver, wshd, met, preciponly):
+def write(root, nam, builder, ver, wshd, met):
     with open(root + nam + ".rvi","w") as f:
         f.write('# -------------------------------------------------------\n')
         f.write('# Raven Input (.rvi) file\n')
@@ -22,7 +23,7 @@ def write(root, nam, builder, ver, wshd, met, preciponly):
         f.write(':Routing              ROUTE_NONE\n')
         f.write(':CatchmentRoute       DUMP\n')
         if len(wshd.xr) > 1: f.write(':InterpolationMethod  INTERP_FROM_FILE          GaugeWeightTable.txt\n')
-        if preciponly:
+        if flg.preciponly:
             f.write(':RainSnowFraction     RAINSNOW_HBV\n')
         else:
             f.write(':RainSnowFraction     RAINSNOW_DATA\n')

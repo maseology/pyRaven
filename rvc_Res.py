@@ -19,4 +19,4 @@ def write(root, nam, hru, res):
                 if firstRes:
                     firstRes=False
                     f.write('\n')
-                f.write(':InitialReservoirStage {:>10} {:>10.1f}\n'.format(k,hru.zga[k]))
+                f.write(':InitialReservoirStage {:>10} {:>10.1f}\n'.format(k,hru.xyzga[k][2]))

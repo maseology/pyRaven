@@ -19,6 +19,7 @@ class Params:
     SNOW_SWI_MAX = 0.3
     SWI_REDUCT_COEFF = 0.01
     AVG_ANNUAL_RUNOFF = 250
+    MAX_PERC_RATE_MULT = 1.0
 
     # land use parameters
     LAKE_PET_CORR = 1.0
@@ -31,6 +32,13 @@ class Params:
     REFREEZE_EXP = 0.6
     DD_REFREEZE_TEMP = -1.8
     HMETS_RUNOFF_COEFF = 0.4
+    HBV_BETA = 1.0
+
+    # soil parameters
+    PET_CORRECTION = 1.0
+    FIELD_CAPACITY = 0.3
+    SAT_WILT = 0.05
+    MAX_CAP_RISE_RATE = 1.1216
 
     # routing parameters
     GAMMA_SHAPE = 2.2
@@ -46,6 +54,7 @@ class Params:
 
     # baseflow
     BASEFLOW_COEFF = 0.007
+    BASEFLOW_N = 1.0
     INTERFLOW_COEFF = 0.04 # mm added
 
     def set(self, pset):

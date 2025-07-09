@@ -1,7 +1,8 @@
 
+from pyRaven.flags import flg
 
 # build Time Series Input file (.rvt)
-def write(root, nam, desc, builder, ver, met, preciponly):
+def write(root, nam, desc, builder, ver, met):
     with open(root + nam + ".rvt","w") as f:
         f.write('# --------------------------------------------\n')
         f.write('# Raven temporal data (.rvt) file\n')
@@ -17,7 +18,7 @@ def write(root, nam, desc, builder, ver, met, preciponly):
         f.write(' :Elevation {}\n'.format(250))
         f.write(' :MultiData\n')
         f.write('   {} {} {}\n'.format(met.dtb.strftime("%Y-%m-%d %H:%M:%S"), 1, len(met.dftem.index)))
-        if preciponly:
+        if flg.preciponly:
             f.write(' :Parameters  TEMP_MAX  TEMP_MIN    PRECIP\n')
             f.write(' :Units              C         C      mm/d\n')
         else:
@@ -30,7 +31,7 @@ def write(root, nam, desc, builder, ver, met, preciponly):
             tn = round(row['Tn'],2)+0
             rf = row['Rf']
             sf = row['Sf']
-            if preciponly:
+            if flg.preciponly:
                 f.write('            {:>10.2f}{:>10.2f}{:>10.1f}\n'.format(tx, tn, rf+sf))
             else:
                 f.write('            {:>10.2f}{:>10.2f}{:>10.1f}{:>10.1f}\n'.format(tx, tn, rf, sf))

@@ -7,7 +7,7 @@ from pyMet.met import Met
 from pyGrid.hdem import HDEM
 from pyGrid.sws import Watershed
 from pyRaven import batchfile, rvi_snowmelt, rvh_hru, rvp_OneBareLayer, rvt_OWRCapi, rvc_allZero
-
+from pyRaven.flags import flg
 
 
 def BasinMelt(ins):    
@@ -31,18 +31,18 @@ def BasinMelt(ins):
 
     # read options
     # params = bsm_params.Params
-    writemetfiles = not os.path.exists(root + "input")
+    flg.writemetfiles = not os.path.exists(root + "input")
     if 'options' in ins.params:
         if 'overwritetemporalfiles' in ins.params['options']:
-            writemetfiles = ins.params['options']['overwritetemporalfiles'] 
+            flg.writemetfiles = ins.params['options']['overwritetemporalfiles'] 
 
     # load data
     print("\n\n=== Loading data..")
     hdem = HDEM(ins.params['hdem'], True)
     wshd = Watershed(ins.params['wshd'], hdem)
     
-    # met = Met(ins.params['met'], skipdata = not writemetfiles)
-    # if writemetfiles: met.dftem = np.transpose(met.dftem, (1, 0, 2)) # re-order array axes               
+    # met = Met(ins.params['met'], skipdata = not flg.writemetfiles)
+    # if flg.writemetfiles: met.dftem = np.transpose(met.dftem, (1, 0, 2)) # re-order array axes               
     met = Met()
     met.dtb = datetime.strptime(ins.params['dtb'],"%Y-%m-%d")
     met.dte = datetime.strptime(ins.params['dte'],"%Y-%m-%d")
@@ -57,7 +57,7 @@ def BasinMelt(ins):
     rvi_snowmelt.write(root, nam, builder, ver, wshd, met)
     rvp_OneBareLayer.write(root, nam, desc, builder, ver) # parameters
     rvh_hru.write(root, nam, desc, builder, ver, wshd) # HRUs    
-    rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd, writemetfiles=writemetfiles) # temporal
+    rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd) # temporal
     rvc_allZero.write(root, nam, desc, builder, ver)
     batchfile.write(root, nam, ver)
 

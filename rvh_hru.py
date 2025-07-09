@@ -1,6 +1,7 @@
 
 import math
 from pyRaven import print, rvh_lakes
+from pyRaven.flags import flg
 
 # build HRU/Basin Definition file (.rvh)
 def write(root, nam, desc, builder, ver, wshd):
@@ -73,7 +74,7 @@ def writeLandLake():
     pass # TODO
 
 def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprofile=''):
-    dlakes = dict()
+    hrulakes = dict()
     with open(root + nam + ".rvh","w") as f:    
         f.write('# --------------------------------------------\n')
         f.write('# Raven HRU Definition (.rvh) file\n')
@@ -93,6 +94,7 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
         f.write(':SubBasins\n')
         f.write(' :Attributes                               NAME  DOWNSTREAM_ID        PROFILE   REACH_LENGTH    GAUGED\n')
         f.write(' :Units                                    none           none           none             km      none\n')
+
         for usid,h in hru.hrus.items():
             dsid = -1
             if usid in wshd.t: dsid = wshd.t[usid]
@@ -103,24 +105,12 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
             if len(wshd.gag)>0: 
                 if len(wshd.gag[usid])>0: gag = 1
 
+            if res is not None and usid in res: gag = 1 # watershed is reservoir
+
             # watershed name
             wnam = wshd.nam[usid]
             cmnt = '' # comment
             if len(wshd.gag[usid])>0: cmnt = '  # '+wshd.gag[usid]
-            # if res is not None and usid in res: # watershed is reservoir
-            #     gag = 1
-            #     if len(wshd.gag[usid])>0:
-            #         wnam = res[usid].name.replace(' ','_') +'_Res_'+str(wshd.gag[usid])
-            #     else:
-            #         # wnam = res[usid].name.replace(' ','_')+'_Res_'+str(usid)
-            #         wnam = res[usid].name.replace(' ','_') +'_Reservoir'
-            # elif len(wshd.nam)==0:
-            #     wnam = 's'+str(usid)
-            # else:
-            #     if len(wshd.gag[usid])>0:
-            #         wnam = wshd.nam[usid].replace(' ','_') +'_'+wshd.gag[usid]
-            #     else:
-            #         wnam = wshd.nam[usid].replace(' ','_') #+'_'+str(usid)
 
             if len(chanprofile) > 0:
                 if h=="lake":
@@ -178,26 +168,32 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
         #     s = wshd.s[t]            
         #     f.write('  {:<10}{:10.3f}{:10.1f}{:10.1f}{:10.1f}{:10}         LU_ALL        VEG_ALL      DEFAULT_P          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2,s.elv,s.ylat,s.xlng,t,s.slp,s.asp))
         def rad2deg(rad): return (rad/math.pi*180.) % 360
-        for t,lusg in hru.hrus.items():
-            s = wshd.s[t]            
+        
+        for t,lusg in hru.hrus.items(): # write lake hrus first to enable simple alternative land use mapping changes
             if lusg=='lake':
+                s = wshd.s[t]
                 c+=1
-                dlakes[t]=c
-                f.write('  {:<10}{:10.3f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2,s.elv,s.ylat,s.xlng,t,'LAKE','LAKE','LAKE',0.,0.))
-            else:
-                z = hru.zga[t]
-                for k,frac in lusg.items():
-                    c += 1
-                    # f.write('  {:<10}{:10.3f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,s.elv,s.ylat,s.xlng,t,k[0][0],k[0][1],k[1],s.slp,s.asp))
-                    f.write('  {:<10}{:10.3f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,z[k][0],s.ylat,s.xlng,t,k[0][0],k[0][1],k[1],rad2deg(z[k][1]),rad2deg(z[k][2]-math.pi/2)))
+                hrulakes[t]=c
+                f.write('  {:<10}{:10.4f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2,s.elv,s.ylat,s.xlng,t,'LAKE','LAKE','LAKE',0.,0.))
+
+        for t,lusg in hru.hrus.items():            
+            if lusg=='lake': continue
+            xyz = hru.xyzga[t]
+            s = wshd.s[t]
+            for k,frac in lusg.items():
+                c += 1
+                ggwz = k[1][0]
+                if flg.gwzonemode: ggwz+=str(k[1][1]) # soiltype + groundwater zone
+                f.write('  {:<10}{:10.4f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,xyz[k][2],xyz[k][1],xyz[k][0],t,k[0][0],k[0][1],ggwz,rad2deg(xyz[k][3]),rad2deg(xyz[k][4]-math.pi/2)))
+        
         f.write(':EndHRUs\n\n')
 
-        # f.write('####\n')
-        # f.write(':HRUGroup AllHRUs\n')
-        # f.write('  1-{}\n'.format(c))
-        # f.write(':EndHRUGroup\n\n')
+        f.write('# create all HRU group\n')
+        f.write(':HRUGroup AllHRUs\n')
+        f.write('  1-{}\n'.format(c))
+        f.write(':EndHRUGroup\n\n')
 
-        if len(dlakes)>0:
+        if len(hrulakes)>0:
             f.write('# create HRU group for lake-types\n')
             f.write(':PopulateHRUGroup LakeHRUs With LANDUSE EQUALS LAKE\n\n')
             f.write('# create HRU group for non-lake HRUs\n')
@@ -205,13 +201,13 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
 
             f.write('# create SubBasin group for lake-types\n')
             f.write(':SubBasinGroup   AllLakeSubbasins\n')
-            print.columns(f,list(dlakes.keys()))
+            print.columns(f,list(hrulakes.keys()))
             f.write(':EndSubBasinGroup\n\n')
             f.write('# create SubBasin group for non-lake HRUs\n')
             f.write(':PopulateSubBasinGroup AllLandSubbasins With SUBBASINS NOTWITHIN AllLakeSubbasins\n\n')
 
             f.write(':RedirectToFile {}-lakes.rvh\n\n'.format(nam))
-            rvh_lakes.write(root, nam, desc, builder, ver, wshd, hru, dlakes, res)
+            rvh_lakes.write(root, nam, desc, builder, ver, wshd, hru, hrulakes, res)
         else:
             f.write(':SubBasinGroup   AllLandSubbasins\n')
             print.columns(f,list(wshd.s.keys()))

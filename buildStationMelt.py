@@ -6,6 +6,7 @@ from pymmio import files as mmio
 from pyMet.met import Met
 from pyGrid.sws import Watershed
 from pyRaven import batchfile, rvi_snowmelt, rvp_OneBareLayer, rvh_hru, rvt_dailyJSON, rvc_allZero, parameters #, sta_rvh, sta_rvp, RVT_dailyAPI, sta_rvc, rvbat
+from pyRaven.flags import flg
 
 def StationMelt(ins):    
 
@@ -37,8 +38,7 @@ def StationMelt(ins):
         print('error: need to define input data')
         quit()
 
-    preonly=False
-    if 'preciponly' in ins.params['options']: preonly=True
+    if 'preciponly' in ins.params['options']: flg.preciponly=True
 
     pars = parameters.getParameters(ins.params)
 
@@ -52,10 +52,10 @@ def StationMelt(ins):
 
 
     print("\n=== Writing model files..")
-    rvi_snowmelt.write(root, nam, builder, ver, wshd, met, preonly)
+    rvi_snowmelt.write(root, nam, builder, ver, wshd, met)
     rvp_OneBareLayer.write(root, nam, desc, builder, ver, pars) # parameters
     rvh_hru.write(root, nam, desc, builder, ver, wshd) # HRUs    
-    rvt_dailyJSON.write(root, nam, desc, builder, ver, met, preonly) # temporal
+    rvt_dailyJSON.write(root, nam, desc, builder, ver, met) # temporal
     rvc_allZero.write(root, nam, desc, builder, ver)
     batchfile.write(root, nam, ver)
 
