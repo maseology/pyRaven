@@ -124,7 +124,7 @@ EndExtraDirs""")
 
         f.write('  # Baseflow\n')
         if flg.gwzonemode:
-            for zone in sorted(set(wshd.gwz.values())):
+            for zone in sorted(set(wshd.zon.values())):
                 f.write('  xBASEFLOW_COEFF{}             random     0.0       1.0    none   none    none\n'.format(zone))
             for st in set([v[0] for v in dsg]):
                 if st=='L': continue # LAKE

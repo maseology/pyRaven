@@ -1,4 +1,5 @@
 
+import os
 import pandas as pd
 from datetime import datetime
 from tqdm import tqdm
@@ -116,9 +117,11 @@ def write(root, nam, desc, builder, ver, wshd, hru, ts, submdl=False):
             f.write(' :RedirectToFile {}\\m{}.rvt\n'.format(indir,t))
             f.write(':EndGauge\n\n')
 
+        # flg.writemetfiles = True
         if flg.writemetfiles:
             pbar = tqdm(total=len(wshd.s), desc='writing forcings')            
             for t,s in wshd.s.items():
+                # if os.path.exists(root+'input\\m{}.rvt'.format(t)) : continue
                 # s = wshd.s[t] 
                 if ts==86400:
                     # getDailyAPI(root+'input\\m{}.rvt'.format(t), cid=t)

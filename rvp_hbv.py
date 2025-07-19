@@ -40,8 +40,15 @@ def write(root, nam, desc, builder, ver, hru, par):
             #     'LAKE': (0.,0.)}
             f.write(' :Attributes                     IMPERV     VEG_COV\n')
             f.write(' :Units                            frac        frac\n')
-            # f.write('  LU_ALL    {:12}{:12}\n'.format(0.0,0.0))
-            for l in dlu: f.write('  {:25}{:12.2f}{:12.2f}\n'.format(l,luxr[l][0],luxr[l][1]))
+            if astpl:
+                for l in dlu:
+                    if l=='Agriculture':
+                        f.write('  {:25}    xAgImprv{:12.2f}\n'.format(l,luxr[l][1]))
+                    else:                        
+                        f.write('  {:25}{:12.2f}{:12.2f}\n'.format(l,luxr[l][0],luxr[l][1]))
+            else:
+                # f.write('  LU_ALL    {:12}{:12}\n'.format(0.0,0.0))
+                for l in dlu: f.write('  {:25}{:12.2f}{:12.2f}\n'.format(l,luxr[l][0],luxr[l][1]))
             f.write(':EndLandUseClasses\n\n')
 
             f.write(':VegetationClasses\n')

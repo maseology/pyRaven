@@ -143,7 +143,7 @@ def __semidistributedCollect(ins, xrlu, xrsg):
     #################################
     # build subwatersheds
     #################################
-    print("\n=== Building sub-basins, HRUs, from land use and surficial geology..")
+    print("\n=== Building sub-basins and HRUs from land use and surficial geology..")
     sel = None
     if 'cid0' in ins.params: sel = int(ins.params['cid0'])
     if 'selwshd' in ins.params: sel = set(ascii.readInts(relpath(ins.params['selwshd'])))

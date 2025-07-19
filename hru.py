@@ -25,7 +25,7 @@ class HRU:
         for sid,cids in wshd.xr.items():
             dt, xt, yt, zt, gt, axt, ayt, gnt = dict(), dict(), dict(), dict(), dict(), dict(), dict(), dict()
             n, nlak, nwl = len(cids), 0, 0
-            gwz = wshd.gwz[sid]
+            zon = wshd.zon[sid]
             for c in cids:                
                 # HARD-CODED DEFAULTS
                 ll = defaultLU
@@ -33,7 +33,7 @@ class HRU:
 
                 if c in lulu: ll = lulu[c]
                 if c in sglu: gg = sglu[c]
-                t = (ll,(gg,gwz))
+                t = (ll,(gg,zon))
                 self.cells[c] = t
 
                 # collect elevations and centroids per hru
@@ -121,29 +121,29 @@ class HRU:
                             for c in cids: 
                                 if self.cells[c]==t: cidm.append(c)
                             if t[0][0]=='Urban':
-                                aggregate(t,(("Urban", "Bare"),('LowMedium',gwz)),v,cidm)
+                                aggregate(t,(("Urban", "Bare"),('LowMedium',zon)),v,cidm)
                             else:
                                 match t[1]:
                                     case 'WetlandSediments': # WetlandSediments/organics
-                                        aggregate(t,(("Wetland", "ShortVegetation"),('WetlandSediments',gwz)),v,cidm)
+                                        aggregate(t,(("Wetland", "ShortVegetation"),('WetlandSediments',zon)),v,cidm)
                                     case _:
                                         match t[0][0]:
                                             case "Wetland" | "Swamp":
-                                                aggregate(t,(("Wetland", "ShortVegetation"),('WetlandSediments',gwz)),v,cidm)
+                                                aggregate(t,(("Wetland", "ShortVegetation"),('WetlandSediments',zon)),v,cidm)
                                             case _: # other/natural
-                                                # aggregate(t,(("ShortVegetation", "ShortVegetation"),('Unknown',gwz)),v,cidm)
+                                                # aggregate(t,(("ShortVegetation", "ShortVegetation"),('Unknown',zon)),v,cidm)
                                                 aggregate(t,(("ShortVegetation", "ShortVegetation"),t[1]),v,cidm)
                                 # match t[1]:
                                 #     case 'Streambed': # Streambed/fluvial/floodplain
-                                #         aggregate(t,(("ShortVegetation", "ShortVegetation"),('Streambed',gwz)),v,cidm)
+                                #         aggregate(t,(("ShortVegetation", "ShortVegetation"),('Streambed',zon)),v,cidm)
                                 #     case 'WetlandSediments': # WetlandSediments/organics
-                                #         aggregate(t,(("Wetland", "ShortVegetation"),('WetlandSediments',gwz)),v,cidm)
+                                #         aggregate(t,(("Wetland", "ShortVegetation"),('WetlandSediments',zon)),v,cidm)
                                 #     case _:
                                 #         match t[0][0]:
                                 #             case 'Agriculture': # agriculture
                                 #                 aggregate(t,(("Agriculture", "ShortVegetation"),t[1]),v,cidm)
                                 #             case "Wetland" | "Swamp":
-                                #                 aggregate(t,(("Wetland", "ShortVegetation"),('WetlandSediments',gwz)),v,cidm)
+                                #                 aggregate(t,(("Wetland", "ShortVegetation"),('WetlandSediments',zon)),v,cidm)
                                 #             case _: # other/natural
                                 #                 aggregate(t,(("ShortVegetation", "ShortVegetation"),t[1]),v,cidm)
 

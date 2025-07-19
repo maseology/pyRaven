@@ -182,16 +182,16 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
             s = wshd.s[t]
             for k,frac in lusg.items():
                 c += 1
-                ggwz = k[1][0]
-                if flg.gwzonemode: ggwz+=str(k[1][1]) # soiltype + groundwater zone
-                f.write('  {:<10}{:10.4f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,xyz[k][2],xyz[k][1],xyz[k][0],t,k[0][0],k[0][1],ggwz,rad2deg(xyz[k][3]),rad2deg(xyz[k][4]-math.pi/2)))
+                zz = k[1][0]
+                if flg.gwzonemode: zz+=str(k[1][1]) # soiltype + zone
+                f.write('  {:<10}{:10.4f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(c,s.km2*frac,xyz[k][2],xyz[k][1],xyz[k][0],t,k[0][0],k[0][1],zz,rad2deg(xyz[k][3]),rad2deg(xyz[k][4]-math.pi/2)))
         
         f.write(':EndHRUs\n\n')
 
-        f.write('# create all HRU group\n')
-        f.write(':HRUGroup AllHRUs\n')
-        f.write('  1-{}\n'.format(c))
-        f.write(':EndHRUGroup\n\n')
+        # f.write('# create all HRU group\n')
+        # f.write(':HRUGroup AllHRUs\n')
+        # f.write('  1-{}\n'.format(c))
+        # f.write(':EndHRUGroup\n\n')
 
         if len(hrulakes)>0:
             f.write('# create HRU group for lake-types\n')
@@ -213,3 +213,13 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
             print.columns(f,list(wshd.s.keys()))
             f.write(':EndSubBasinGroup\n\n')      
 
+        if len(wshd.zon)>0:
+            grps = [int(i) for i in list(set(wshd.zon.values()))]
+            grps.sort()
+            for g in grps:
+                ll = list()
+                for si,zi in wshd.zon.items():
+                    if zi==g: ll.append(si)
+                f.write(':SubBasinGroup   UserGroup{:03d}\n'.format(g))
+                print.columns(f,ll)
+                f.write(':EndSubBasinGroup\n\n')

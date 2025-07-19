@@ -40,7 +40,7 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write(':Alias PHREATIC_ZONE  SOIL[1]\n')
         f.write(':Alias QUICK_RUNOFF   CONVOLUTION[0]\n')
         f.write(':Alias DELAYED_RUNOFF CONVOLUTION[1]\n')
-        f.write(':DefineHRUGroups AllHRUs LakeHRUs LandHRUs\n\n')
+        f.write(':DefineHRUGroups LakeHRUs LandHRUs\n\n')
 
 
         f.write('\n# hydrologic process order for HMETS emulation\n')
@@ -58,8 +58,8 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write(' :Convolve                 CONVOL_GAMMA         QUICK_RUNOFF     SURFACE_WATER     # Surface runoff\n')
         f.write(' :Convolve                 CONVOL_GAMMA_2       DELAYED_RUNOFF   SURFACE_WATER     # Delayed runoff\n')
         f.write(' :Baseflow                 BASE_LINEAR          PHREATIC_ZONE    SURFACE_WATER     # Baseflow  "groundwater flow" in Martel etal. (2017)\n')
-        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        AllHRUs          VADOSE_ZONE       1.0\n')
-        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        AllHRUs          PHREATIC_ZONE     1.0\n')
+        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         VADOSE_ZONE       1.0\n')
+        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         PHREATIC_ZONE     1.0\n')
         f.write(':EndHydrologicProcesses\n')
 
 

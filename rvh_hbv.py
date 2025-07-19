@@ -16,19 +16,38 @@ def write(root, nam, desc, builder, ver, wshd, hru, res, par):
         shutil.copyfile(root + nam + ".rvh", mmio.getFileDir(root) +"/" + nam + ".rvh.tpl")
         with open(mmio.getFileDir(root) +"/" + nam + ".rvh.tpl","a") as f:    
             f.write('# Set global sub-basin parameters  xLogMAX_PERC_RATE_MULT\n')
-            f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_CONC xTIME_CONC\n')
-            f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_TO_PEAK xHalfTIME_CONC\n')
-            f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_LAG xTIME_LAG\n')
+
+            if len(wshd.zon)>0:
+                grps = [int(i) for i in list(set(wshd.zon.values()))]
+                grps.sort()
+                for g in grps:
+                    f.write(':SBGroupPropertyOverride UserGroup{0:03d} TIME_CONC xTIME_CONC{0:03d}\n'.format(g))
+                    f.write(':SBGroupPropertyOverride UserGroup{0:03d} TIME_TO_PEAK xHalfTIME_CONC{0:03d}\n'.format(g))
+                    f.write(':SBGroupPropertyOverride UserGroup{0:03d} TIME_LAG xTIME_LAG{0:03d}\n'.format(g))
+            else:
+                f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_CONC xTIME_CONC\n')
+                f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_TO_PEAK xHalfTIME_CONC\n')
+                f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_LAG xTIME_LAG\n')
+
             f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MAX_PERC_RATE xMAX_PERC_RATE_MULT\n')
             f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MANNINGS_N {}\n'.format(1.0))
             f.write(':SBGroupPropertyMultiplier  AllLakeSubbasins  RESERVOIR_CREST_WIDTH {}\n'.format(1.0))
             f.write('\n')
+
     else:
         with open(root + nam + ".rvh","a") as f:    
             f.write('# Set subbasin parameters, notes: TIME_CONC=MAXBAS in HBV (TIME_TO_PEAK=TIME_CONC/2 for HBV replication)\n')
-            f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_CONC {}\n'.format(par.TIME_CONC))
-            f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_TO_PEAK {}\n'.format(par.TIME_CONC/2))
-            f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_LAG {}\n'.format(par.TIME_LAG))
+            if len(wshd.zon)>0:
+                grps = [int(i) for i in list(set(wshd.zon.values()))]
+                grps.sort()
+                for g in grps:
+                    f.write(':SBGroupPropertyOverride UserGroup{:03d} TIME_CONC {}\n'.format(g,par.TIME_CONC))
+                    f.write(':SBGroupPropertyOverride UserGroup{:03d} TIME_TO_PEAK {}\n'.format(g,par.TIME_CONC/2))
+                    f.write(':SBGroupPropertyOverride UserGroup{:03d} TIME_LAG {}\n'.format(g,par.TIME_LAG))
+            else:
+                f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_CONC {}\n'.format(par.TIME_CONC))
+                f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_TO_PEAK {}\n'.format(par.TIME_CONC/2))
+                f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_LAG {}\n'.format(par.TIME_LAG))
             f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MAX_PERC_RATE {}\n'.format(par.MAX_PERC_RATE_MULT))
             f.write('#:SBGroupPropertyMultiplier  AllLandSubbasins  MANNINGS_N {}\n'.format(1.0))
             f.write('#:SBGroupPropertyMultiplier  AllLakeSubbasins  RESERVOIR_CREST_WIDTH {}\n'.format(1.0))            

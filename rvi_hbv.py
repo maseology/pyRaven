@@ -64,7 +64,7 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write(':Alias                FAST_RESERVOIR SOIL[1]\n')
         f.write(':Alias                SLOW_RESERVOIR SOIL[2]\n')
         f.write(':LakeStorage          SLOW_RESERVOIR\n')
-        f.write(':DefineHRUGroups AllHRUs LakeHRUs LandHRUs\n\n')
+        f.write(':DefineHRUGroups  LakeHRUs  LandHRUs\n\n')
 
 
         f.write('\n# hydrologic process order for HBV emulation\n')
@@ -89,8 +89,8 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write(' :Baseflow                 BASE_POWER_LAW       FAST_RESERVOIR   SURFACE_WATER\n')
         # f.write(' :Baseflow                 BASE_THRESH_POWER    FAST_RESERVOIR   SURFACE_WATER\n') # HBV-light
         f.write(' :Baseflow                 BASE_LINEAR          SLOW_RESERVOIR   SURFACE_WATER\n')
-        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        AllHRUs          FAST_RESERVOIR    1.0\n')
-        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        AllHRUs          SLOW_RESERVOIR    1.0\n')
+        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         FAST_RESERVOIR    1.0\n')
+        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         SLOW_RESERVOIR    1.0\n')
 
         f.write(':EndHydrologicProcesses\n')
 

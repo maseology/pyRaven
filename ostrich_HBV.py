@@ -12,11 +12,10 @@ def writeDDS(root, nam, wshd, hru, res, nsmpl=10):
     shutil.copy("E:/Sync/@dev/Raven-bin/"+ofn,root+ofn)
 
     haslakes=False
-    if haslakes: 
-        for ihru in hru.hrus.keys():
-            if wshd.lak[ihru]:
-                haslakes = True
-                break
+    for ihru in hru.hrus.keys():
+        if wshd.lak[ihru]:
+            haslakes = True
+            break
 
     with open(root+nam+'-Ostrich.bat','w') as f:
         f.write("""@ECHO OFF
@@ -79,6 +78,7 @@ EndExtraDirs""")
         f.write('  xTop                         random     0.1       0.5    none   none    none\n')
         f.write('  xFast                        random     0.1       2.0    none   none    none\n')
         f.write('  xSlow                        random     0.1       2.0    none   none    none\n')
+        f.write('  xAgImprv                     random     0.0       1.0    none   none    none\n')
         f.write('  xRAINSNOW_TEMP               random    -2.0       4.0    none   none    none\n')
         if flg.preciponly: f.write('  xRAINSNOW_DELTA              random     1.0      20.0    none   none    none\n')
         f.write('  xSNOW_SWI                    random    0.01      0.12    none   none    none\n')
@@ -110,8 +110,15 @@ EndExtraDirs""")
 
         f.write('  #\n')
         f.write('  # Routing\n')
-        f.write('  xTIME_CONC                   random     0.0        10    none   none    none\n')
-        f.write('  xTIME_LAG                       0.0     0.0       5.0    none   none    none\n')
+        if len(wshd.zon)>0:
+            grps = [int(i) for i in list(set(wshd.zon.values()))]
+            grps.sort()
+            for g in grps:
+                f.write('  xTIME_CONC{0:03d}                random     0.0        10    none   none    none\n'.format(g))
+                f.write('  xTIME_LAG{0:03d}                    0.0     0.0       5.0    none   none    none\n'.format(g))
+        else:
+            f.write('  xTIME_CONC                   random     0.0        10    none   none    none\n')
+            f.write('  xTIME_LAG                       0.0     0.0       5.0    none   none    none\n')
         f.write('  #\n')
         f.write('  # Interception\n')
         f.write('  xRAIN_ICEPT_FACT             random     0.0       1.0    none   none    none\n')
@@ -122,7 +129,7 @@ EndExtraDirs""")
 
         f.write('  # Baseflow\n')
         if flg.gwzonemode:
-            for zone in sorted(set(wshd.gwz.values())):
+            for zone in sorted(set(wshd.zon.values())):
                 f.write('  xBASEFLOW_COEFF{}             random     0.0       1.0    none   none    none\n'.format(zone))
             for st in set([v[0] for v in dsg]):
                 if st=='L': continue # LAKE
@@ -164,7 +171,12 @@ EndExtraDirs""")
         f.write('BeginTiedParams\n')
         f.write('  # logarithm, base 10 (pl = 10^p)\n')
         f.write('  xMAX_PERC_RATE_MULT   1   xLogMAX_PERC_RATE_MULT  exp     10.0  1.0  1.0  0.0  free\n')
-        f.write('  xHalfTIME_CONC        1   xTIME_CONC              linear   0.5  0.0  free\n')
+        if len(wshd.zon)>0:
+            grps = [int(i) for i in list(set(wshd.zon.values()))]
+            grps.sort()
+            for g in grps: f.write('  xHalfTIME_CONC{0:03d}     1   xTIME_CONC{0:03d}           linear   0.5  0.0  free\n'.format(g))
+        else:
+            f.write('  xHalfTIME_CONC        1   xTIME_CONC              linear   0.5  0.0  free\n')
         f.write('EndTiedParams\n')
         
 
