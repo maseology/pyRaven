@@ -75,3 +75,16 @@ def buildGaugedSubmodels(root0, root, nam, desc, builder, ver, wshd, hrus, res, 
 
     mmio.deletefile(root + nam + ".rvt")
     mmio.deletefile(root + 'GaugeWeightTable.txt')
+
+
+def buildLumped(root, nam, desc, builder, ver, wshd, params, ts, dtb, dte):
+    # full model domain
+    mmio.mkDir(root + "input")
+    mmio.mkDir(root + "output")
+    rvi_hbv.write(root, nam, builder, ver, dtb, dte, None, ts)            
+    rvh_hbv.writeLumped(root, nam, desc, builder, ver, wshd) # structure
+    rvp_hbv.writeLumped(root, nam, desc, builder, ver, params) # parameters
+    rvp_channels.default_trap(root + nam + ".rvp")
+    rvc_hbv.write(root, nam, desc, builder, ver, None, None) # initial conditions
+    rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd, None, ts) # temporal forcing files
+    batchfile.write(root, nam, ver) 

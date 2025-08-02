@@ -77,7 +77,7 @@ def write(root, nam, desc, builder, ver, hru, par):
                     f.write('  ' + s + 'PHREATIC\n')
             f.write(':EndSoilClasses\n\n')
 
-            f.write('# soil profile definition\n')        
+            f.write('# soil profile definition (horizon depths in metres)\n')        
             f.write(':SoilProfiles\n')
             for s in dsg: 
                 if s=='LAKE':continue
@@ -260,7 +260,7 @@ def writeLumped(root, nam, desc, builder, ver, par):
             f.write('  PHREATIC\n')
             f.write(':EndSoilClasses\n\n')
 
-            f.write('# soil profile definition\n')        
+            f.write('# soil profile definition (horizon depths in metres)\n')        
             f.write(':SoilProfiles\n')
             if astpl:
                 f.write('  {0:25}{1:5} VADOSE{2:>10} PHREATIC{3:>10}\n'.format('soilclass',2,'xVadose','xPhreatic'))
@@ -294,9 +294,7 @@ def writeLumped(root, nam, desc, builder, ver, par):
                 f.write(':GlobalParameter AVG_ANNUAL_RUNOFF {} # mm\n'.format(par.AVG_ANNUAL_RUNOFF))
 
 
-            f.write('\n\n# class parameters:\n')
-            f.write('# -----------------------\n\n')
-
+            f.write('\n# land use parameters:\n')
             f.write('# snow balance and infiltration parameters (HMETS):\n')
             f.write(':LandUseParameterList\n')
             f.write(' :Parameters         MIN_MELT_FACTOR  MAX_MELT_FACTOR  DD_MELT_TEMP  DD_AGGRADATION  REFREEZE_FACTOR  DD_REFREEZE_TEMP  REFREEZE_EXP  HMETS_RUNOFF_COEFF\n')

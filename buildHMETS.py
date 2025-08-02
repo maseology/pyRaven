@@ -87,7 +87,7 @@ def buildLumped(root, nam, desc, builder, ver, wshd, params, ts, dtb, dte):
     rvi_hmets.write(root, nam, builder, ver, dtb, dte, None, ts)            
     rvh_hmets.writeLumped(root, nam, desc, builder, ver, wshd) # structure
     rvp_hmets.writeLumped(root, nam, desc, builder, ver, params) # parameters
-    rvp_channels.default_trap(root, nam)
+    rvp_channels.default_trap(root + nam + ".rvp")
     rvc_hmets.write(root, nam, desc, builder, ver, None, None) # initial conditions
     rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd, None, ts) # temporal forcing files
     batchfile.write(root, nam, ver) 

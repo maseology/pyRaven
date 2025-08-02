@@ -36,6 +36,8 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
 
         f.write(':SoilModel            SOIL_TWO_LAYER\n\n') # Two soil layers
 
+        f.write(':AllowSoilOverfill\n\n') # soils may be filled beyond their maximum storage capacity, generally recommended for the HMETS model
+
         f.write(':Alias VADOSE_ZONE    SOIL[0]\n')
         f.write(':Alias PHREATIC_ZONE  SOIL[1]\n')
         f.write(':Alias QUICK_RUNOFF   CONVOLUTION[0]\n')
@@ -58,8 +60,8 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write(' :Convolve                 CONVOL_GAMMA         QUICK_RUNOFF     SURFACE_WATER     # Surface runoff\n')
         f.write(' :Convolve                 CONVOL_GAMMA_2       DELAYED_RUNOFF   SURFACE_WATER     # Delayed runoff\n')
         f.write(' :Baseflow                 BASE_LINEAR          PHREATIC_ZONE    SURFACE_WATER     # Baseflow  "groundwater flow" in Martel etal. (2017)\n')
-        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         VADOSE_ZONE       1.0\n')
-        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         PHREATIC_ZONE     1.0\n')
+        # f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         VADOSE_ZONE       1.0\n')
+        # f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         PHREATIC_ZONE     1.0\n')
         f.write(':EndHydrologicProcesses\n')
 
 

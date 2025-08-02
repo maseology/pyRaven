@@ -29,7 +29,7 @@ def __semidistributedCollect(ins, xrlu, xrsg):
     def isCalib():
         if 'options' in ins.params:
             if 'calibrationmode' in ins.params['options']:
-                print('\n ** Calibration Mode enabled ** ')
+                print('\n ** Calibration Mode Enabled ** ')
                 print('    Raven built with calibration/MC optimizations:')
                 print('      - Silent mode')
                 print('      - Adds global parameter adjusters')
@@ -232,10 +232,6 @@ def HMETS_OWRC(ins, xrlu, xrsg):
 
     endtime = str(timedelta(seconds=round(timer() - b0,0)))
     print('\ntotal elapsed time: ' + endtime)
-
-
-
-
 
 
 # the HBV model (as built by ORMGP for application in southern Ontario, Canada)

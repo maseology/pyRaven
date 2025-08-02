@@ -84,14 +84,16 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write('  :-->Conditional HRU_TYPE IS_NOT LAKE\n') # precip on the lake is assumed to be stored in the SURFACE_WATER store (which is where Raven puts precipitation on a lake). However, without revision, native HBV (which doesn’t have lakes) flushes this precip to some routing stores
         f.write(' :SoilEvaporation          SOILEVAP_HBV         TOPSOIL          ATMOSPHERE\n')
         f.write(' :CapillaryRise            CRISE_HBV            FAST_RESERVOIR   TOPSOIL\n')
-        f.write(' :SoilEvaporation          SOILEVAP_HBV         FAST_RESERVOIR   ATMOSPHERE\n')
+        # f.write(' :SoilEvaporation          SOILEVAP_HBV         FAST_RESERVOIR   ATMOSPHERE\n')
         f.write(' :Percolation              PERC_CONSTANT        FAST_RESERVOIR   SLOW_RESERVOIR\n')
-        f.write(' :Baseflow                 BASE_POWER_LAW       FAST_RESERVOIR   SURFACE_WATER\n')
+        f.write('  :-->Conditional LAND_CLASS IS_NOT Urban\n')
+        f.write(' :Flush                    RAVEN_DEFAULT        FAST_RESERVOIR   SLOW_RESERVOIR    0.05\n')
+        f.write('  :-->Conditional LAND_CLASS IS Urban\n')
         # f.write(' :Baseflow                 BASE_THRESH_POWER    FAST_RESERVOIR   SURFACE_WATER\n') # HBV-light
+        f.write(' :Baseflow                 BASE_POWER_LAW       FAST_RESERVOIR   SURFACE_WATER\n')
         f.write(' :Baseflow                 BASE_LINEAR          SLOW_RESERVOIR   SURFACE_WATER\n')
-        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         FAST_RESERVOIR    1.0\n')
-        f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         SLOW_RESERVOIR    1.0\n')
-
+        # f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         FAST_RESERVOIR    1.0\n')
+        # f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         SLOW_RESERVOIR    1.0\n')
         f.write(':EndHydrologicProcesses\n')
 
 
@@ -108,23 +110,19 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write('\n# output waterbudgets\n')
         # f.write('\n{}:WriteNetCDFFormat\n'.format(cmnt))
 
-        f.write('{}:CustomOutput MONTHLY CUMULSUM  PRECIP                                   BY_HRU\n'.format(cmnt))   # monthly precipitation by hru
-        f.write('{}:CustomOutput MONTHLY CUMULSUM  AET                                      BY_HRU\n'.format(cmnt))   # monthly evapotranspiration by hru
-        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:PONDED_WATER.And.SURFACE_WATER   BY_HRU\n'.format(cmnt))   # total runoff      
-        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:FAST_RESERVOIR.And.SURFACE_WATER BY_HRU\n'.format(cmnt))   # interflow
-        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:SLOW_RESERVOIR.And.SURFACE_WATER BY_HRU\n'.format(cmnt))   # baseflow
+        f.write('{}:CustomOutput MONTHLY CUMULSUM  PRECIP                                    BY_HRU\n'.format(cmnt))   # monthly precipitation by hru
+        f.write('{}:CustomOutput MONTHLY CUMULSUM  AET                                       BY_HRU\n'.format(cmnt))   # monthly evapotranspiration by hru
+        f.write('{}:CustomOutput MONTHLY CUMULSUM  RUNOFF                                    BY_HRU\n'.format(cmnt))   # monthly runoff by hru
 
-        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:PONDED_WATER.And.TOPSOIL         BY_HRU\n'.format(cmnt))   # infiltration
-        f.write('{}:CustomOutput MONTHLY AVERAGE   To:SLOW_RESERVOIR                        BY_HRU\n'.format(cmnt))   # recharge
+        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:PONDED_WATER.And.TOPSOIL          BY_HRU\n'.format(cmnt))   # infiltration
+        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:FAST_RESERVOIR.And.SLOW_RESERVOIR BY_HRU\n'.format(cmnt))   # recharge
+        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:SLOW_RESERVOIR.And.SURFACE_WATER  BY_HRU\n'.format(cmnt))   # baseflow
 
-        f.write('{}:CustomOutput MONTHLY AVERAGE   TOPSOIL                                  BY_HRU\n'.format(cmnt))   # vadose zone storage
-        f.write('{}:CustomOutput MONTHLY AVERAGE   FAST_RESERVOIR                           BY_HRU\n'.format(cmnt))   # fast zone storage
-        f.write('{}:CustomOutput MONTHLY AVERAGE   SLOW_RESERVOIR                           BY_HRU\n'.format(cmnt))   # slow zone storage
+        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:PONDED_WATER.And.SURFACE_WATER    BY_HRU\n'.format(cmnt))   # impervious runoff
 
-        # f.write('{}:CustomOutput DAILY   AVERAGE   SNOW              BY_BASIN\n'.format(cmnt)) # daily snowpack by sub-watershed
-        # f.write('{}:CustomOutput DAILY   AVERAGE   AET               BY_BASIN\n'.format(cmnt)) # daily evapotranspiration by sub-watershed
-        # f.write('{}:CustomOutput DAILY   AVERAGE   TOPSOIL           BY_BASIN\n'.format(cmnt)) # daily soil moisture by sub-watershed
-        # f.write('{}:CustomOutput DAILY   AVERAGE   FAST_RESERVOIR    BY_BASIN\n'.format(cmnt)) # daily soil moisture by sub-watershed
+        f.write('{}:CustomOutput MONTHLY AVERAGE   TOPSOIL                                   BY_HRU\n'.format(cmnt))   # vadose zone storage
+        f.write('{}:CustomOutput MONTHLY AVERAGE   FAST_RESERVOIR                            BY_HRU\n'.format(cmnt))   # fast zone storage
+        f.write('{}:CustomOutput MONTHLY AVERAGE   SLOW_RESERVOIR                            BY_HRU\n'.format(cmnt))   # slow zone storage
 
 
         if not flg.calibrationmode and res is not None:

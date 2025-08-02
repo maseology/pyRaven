@@ -16,13 +16,14 @@ def write(root, nam, desc, builder, ver, hru, res):
 
         if hru is None:
             f.write(':UniformInitialConditions SOIL[0] {:>10.3f}\n'.format(5.))
-            f.write(':UniformInitialConditions SOIL[1] {:>10.3f}\n'.format(35.))
-            f.write(':UniformInitialConditions SOIL[2] {:>10.3f}\n'.format(35.))
+            f.write(':UniformInitialConditions SOIL[1] {:>10.3f}\n'.format(0.))
+            f.write(':UniformInitialConditions SOIL[2] {:>10.3f}\n'.format(40.))
         else:
             f.write(':HRUStateVariableTable\n')
             f.write('  :Attributes SOIL[0] SOIL[1] SOIL[2]\n')
-            f.write('  :Units mm mm\n')
-            f.write('   LandHRUs {:10.3}{:10.3}{:10.3}\n'.format(5.,35.,35.))
+            # f.write('  :Attributes TOPSOIL FAST_RESERVOIR SLOW_RESERVOIR\n')
+            f.write('  :Units mm mm mm\n')
+            f.write('   LandHRUs {:10.3}{:10.3}{:10.3}\n'.format(5.,0.,40.))
             f.write('   LakeHRUs        0.0       0.0       0.0\n')
             f.write(':EndHRUStateVariableTable\n')
 

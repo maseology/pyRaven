@@ -1,4 +1,5 @@
 
+import math
 from pymmio import files as mmio
 from pyRaven.flags import flg
 
@@ -77,15 +78,16 @@ def default8point(root, nam, wshd):
                     if s.floodplrough <= 0: s.floodplrough = 0.1
 
                     stinfo = 'Ag{:2.0f}%; Nat{:2.0f}%; Urb{:2.0f}%'.format(wshd.info[t][0], wshd.info[t][1], wshd.info[t][2])
+                    grad = math.tan(s.slp) # (convert angle to rise/run: "bed slope expressed as a slope ratio")
                     if s.valleywidth <= s.chanwidth:
                         if astpl:
-                            trapezoid(f, 'chn_{}  # {} {}'.format(t, wshd.nam[t], stinfo),s.chanwidth,s.slp,n='xNurban')
+                            trapezoid(f, 'chn_{}  # {} {}'.format(t, wshd.nam[t], stinfo),s.chanwidth,grad,n='xNurban')
                         else:
-                            trapezoid(f, 'chn_{}  # {} {}'.format(t, wshd.nam[t], stinfo),s.chanwidth,s.slp,s.chanrough)
+                            trapezoid(f, 'chn_{}  # {} {}'.format(t, wshd.nam[t], stinfo),s.chanwidth,grad,s.chanrough)
                     else:
                         fpw = (s.valleywidth-s.chanwidth)/2 # floodplain width
                         f.write(':ChannelProfile chn_{}  # {} {}\n'.format(t, wshd.nam[t], stinfo))
-                        f.write(' :Bedslope {:5.3f}\n'.format(s.slp))
+                        f.write(' :Bedslope {:5.3f}\n'.format(grad))
                         f.write(' :SurveyPoints\n')
                         f.write('   {:12.3f}{:12.3f}\n'.format(0., s.elv+th))
                         f.write('   {:12.3f}{:12.3f}\n'.format(tw, s.elv))

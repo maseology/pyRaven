@@ -89,7 +89,7 @@ def write(root, nam, desc, builder, ver, hru, par):
                     f.write('  ' + s + 'SLOW\n')
             f.write(':EndSoilClasses\n\n')
 
-            f.write('# soil profile definition\n')        
+            f.write('# soil profile definition (horizon depths in metres)\n')        
             f.write(':SoilProfiles\n')
             # f.write('  DEFAULT_P,    3,    TOP, 0.075, FAST, 0.1,  SLOW, 5.0\n')
             for s in dsg: 
@@ -244,6 +244,136 @@ def write(root, nam, desc, builder, ver, hru, par):
                         f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT{:15.3f}            _DEFAULT    _DEFAULT\n'.format(s + 'FAST',sxgrDay[s])) 
                         f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT{:20.3f}    _DEFAULT\n'.format(s + 'SLOW',par.BASEFLOW_COEFF))        
                     f.write(':EndSoilParameterList\n\n')
+
+    write_rvp(root + nam + ".rvp", False)
+    if flg.calibrationmode: write_rvp(mmio.getFileDir(root) +"/"+ nam + ".rvp.tpl", True)
+
+
+def writeLumped(root, nam, desc, builder, ver, par):
+
+    def write_rvp(fp, astpl):
+        with open(fp,"w") as f:
+            f.write('# --------------------------------------------\n')
+            f.write('# Raven classed parameter file (.rvp)\n')
+            # f.write('# HEC-like semi-distributed watershed model\n')
+            f.write('# ' + desc + '\n')        
+            f.write('# written by ' + builder + '\n')
+            f.write('# using pyRaven builder\n')
+            f.write('# Raven version: ' + ver + '\n')
+            f.write('# --------------------------------------------\n\n')
+
+
+            f.write('\n# -----------------\n')
+            f.write('# class definitions\n')
+            f.write('# -----------------\n')
+
+            f.write(':LandUseClasses\n')
+            f.write(' :Attributes                     IMPERM  FOREST_COV\n')
+            f.write(' :Units                            frac        frac\n')
+            f.write('  {:25}{:12.2f}{:12.2f}\n'.format('luclass',0.15,0.15))
+            f.write(':EndLandUseClasses\n\n')
+
+            f.write(':VegetationClasses\n')
+            f.write(' :Attributes                   MAX_HT   MAX_LAI  MAX_LEAF_COND\n')
+            f.write(' :Units                             m      none       mm_per_s\n')        
+            f.write('  {:25}{:10}{:10}{:15}\n'.format('vegclass',10.,4.,.1))
+            f.write(':EndVegetationClasses\n\n')
+
+            f.write(':SoilClasses\n')
+            f.write('  TOP\n')
+            f.write('  FAST\n')
+            f.write('  SLOW\n')
+            f.write(':EndSoilClasses\n\n')
+
+            f.write('# soil profile definition (horizon depths in metres)\n')        
+            f.write(':SoilProfiles\n')
+            if astpl:
+                f.write('  {0:15}{1:5}  TOP{2:>10}  FAST{3:>10}  SLOW{4:>10}\n'.format('soilclass',3,'xTop','xFast','xSlow'))
+            else:
+                f.write('  {0:15}{1:5}  TOP{2:>10}  FAST{3:>10}  SLOW{4:>10}\n'.format('soilclass',3,0.075,0.1,5.0))
+            f.write(':EndSoilProfiles\n\n')
+
+
+            f.write('\n# -----------------------\n')
+            f.write('# parameter specification\n')
+            f.write('# -----------------------\n')
+
+
+            f.write('# global parameters:\n')
+            f.write('# -----------------------\n')
+            if astpl:
+                f.write(':GlobalParameter RAINSNOW_TEMP     {}\n'.format('xRAINSNOW_TEMP'))
+                if flg.preciponly: f.write(':GlobalParameter RAINSNOW_DELTA    {}\n'.format('xRAINSNOW_DELTA'))
+                f.write(':GlobalParameter SNOW_SWI          {}\n'.format('xSNOW_SWI'))
+                f.write(':GlobalParameter AVG_ANNUAL_RUNOFF {} # mm\n'.format(par.AVG_ANNUAL_RUNOFF))
+            else:
+                f.write(':GlobalParameter RAINSNOW_TEMP     {}\n'.format(par.RAINSNOW_TEMP))
+                if flg.preciponly: f.write(':GlobalParameter RAINSNOW_DELTA    {}\n'.format(par.RAINSNOW_DELTA))
+                f.write(':GlobalParameter SNOW_SWI          {}\n'.format(par.SNOW_SWI))
+                f.write(':GlobalParameter AVG_ANNUAL_RUNOFF {}\n'.format(par.AVG_ANNUAL_RUNOFF))
+                # :GlobalParameter AIRSNOW_COEFF   0.75 #(1-x6)
+                # :GlobalParameter AVG_ANNUAL_SNOW 123.3 #x5 mm
+                # :GlobalParameter PRECIP_LAPSE    0.4
+                # :GlobalParameter ADIABATIC_LAPSE 6.5
+
+
+            f.write('\n# land use parameters:\n')
+            f.write(':LandUseParameterList\n')
+            f.write(' :Parameters           LAKE_PET_CORR  MELT_FACTOR  REFREEZE_FACTOR\n')
+            f.write(' :Units                         none       mm/d/K           mm/d/K\n') 
+            if astpl:
+                f.write('  [DEFAULT] {:>24} {:>12} {:>16}\n'.format('xLAKE_PET_CORR', 'xMELT_FACTOR', 'xREFREEZE_FACTOR'))
+            else:
+                f.write('  [DEFAULT] {:24} {:12} {:16}\n'.format(par.LAKE_PET_CORR, par.MELT_FACTOR, par.REFREEZE_FACTOR))
+            f.write(':EndLandUseParameterList\n\n')
+
+
+            f.write('# interception parameters:\n')
+            f.write(':VegetationParameterList\n')
+            # f.write(' :Parameters            RAIN_ICEPT_PCT  SNOW_ICEPT_PCT\n') # if using PRECIP_ICEPT_USER
+            # f.write(' :Units                           none            none\n')
+            # f.write('  [DEFAULT]                        0.0             0.0\n')
+            f.write(' :Parameters          RAIN_ICEPT_FACT  SNOW_ICEPT_FACT  MAX_CAPACITY  MAX_SNOW_CAPACITY\n') # if using PRECIP_ICEPT_LAI
+            f.write(' :Units                          none             none          none               none\n')
+            if astpl:
+                f.write('  [DEFAULT] {:>25}{:>17}{:>14}{:>19}\n'.format('xRAIN_ICEPT_FACT', 'xSNOW_ICEPT_FACT','xMAX_CAPACITY', 'xMAX_SNOW_CAPACITY'))   
+            else:
+                f.write('  [DEFAULT] {:25}{:17}{:14}{:19}\n'.format(par.RAIN_ICEPT_FACT, par.SNOW_ICEPT_FACT,par.MAX_CAPACITY, par.MAX_SNOW_CAPACITY))   
+            # for v in dveg: 
+            #     if v == 'Bare':
+            #         f.write('  {:25}       0.0              0.0\n'.format(v))
+            #     else:
+            #         f.write('  {:25}  _DEFAULT         _DEFAULT\n'.format(v))
+            f.write(':EndVegetationParameterList\n\n')
+
+            f.write(':SeasonalCanopyLAI\n')
+            f.write('  {:25}  0.0  0.0  0.0  0.0  1.0  2.0  4.5  4.5  3.0  2.0  0.0  0.0\n'.format('vegclass'))          
+            f.write(':EndSeasonalCanopyLAI\n\n')        
+
+
+            f.write('# soilzone parameters:\n')
+            f.write(':SoilParameterList\n')
+            # HBV parameters:
+            #   BETA: HBV_BETA
+            #     FC: <soillayerthickness> * POROSITY  "maximum soil moisture storage"
+            #     LP: FIELD_CAPACITY (when SAT_WILT=0)
+            #     K0: BASEFLOW_COEFF2
+            #    LUZ: STORAGE_THRESHOLD
+            #  K1/K2: BASEFLOW_COEFF
+            #   xtra: BASE_THRESH_N
+            f.write(' :Parameters                PET_CORRECTION  POROSITY  HBV_BETA  FIELD_CAPACITY  SAT_WILT  MAX_CAP_RISE_RATE  MAX_PERC_RATE      BASEFLOW_COEFF  BASEFLOW_N\n') #  BASEFLOW_COEFF2  STORAGE_THRESHOLD\n') # for BASE_THRESH_STOR
+            f.write(' :Units                               none      none      none            none      none               mm/d           mm/d                 1/d        none\n') #              1/d                  m\n')
+            if astpl:
+                f.write('  [DEFAULT]               {:>16}       1.0{:>10}{:>16}       0.0{:>19}            0.0{:>20}{:>12}\n'.format('xPET_CORRECTION','xHBV_BETA','xFIELD_CAPACITY','xMAX_CAP_RISE_RATE','xinterflow','xBASEFLOW_N'))
+                f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT            _DEFAULT    _DEFAULT\n'.format('TOP ')) 
+                f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT{:15.3f}            _DEFAULT    _DEFAULT\n'.format('FAST', 'xinterflow')) 
+                f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT{:>20}    _DEFAULT\n'.format('SLOW','xbf'))
+            else:
+                f.write('  [DEFAULT]               {:>16}{:>10}{:>10}{:>16}{:>10}{:>19}{:>15}{:20.3f}{:>12}\n'.format(par.PET_CORRECTION,1.0,par.HBV_BETA,par.FIELD_CAPACITY,0.0,par.MAX_CAP_RISE_RATE,0.0,par.INTERFLOW_COEFF,par.BASEFLOW_N))
+                f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT            _DEFAULT    _DEFAULT\n'.format('TOP ')) 
+                f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT{:15.3f}            _DEFAULT    _DEFAULT\n'.format('FAST',par.INTERFLOW_COEFF)) 
+                f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT{:20.3f}    _DEFAULT\n'.format('SLOW',par.BASEFLOW_COEFF))        
+            f.write(':EndSoilParameterList\n\n')
 
     write_rvp(root + nam + ".rvp", False)
     if flg.calibrationmode: write_rvp(mmio.getFileDir(root) +"/"+ nam + ".rvp.tpl", True)

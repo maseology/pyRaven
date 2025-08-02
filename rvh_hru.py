@@ -197,7 +197,7 @@ def writeSemiDistributed(root, nam, desc, builder, ver, wshd, hru, res, chanprof
             f.write('# create HRU group for lake-types\n')
             f.write(':PopulateHRUGroup LakeHRUs With LANDUSE EQUALS LAKE\n\n')
             f.write('# create HRU group for non-lake HRUs\n')
-            f.write(':PopulateHRUGroup LandHRUs With LANDUSE NOTEQUALS LAKE\n\n')
+            f.write(':PopulateHRUGroup LandHRUs With LANDUSE DOESNTEQUAL LAKE\n\n') # NOTEQUALS
 
             f.write('# create SubBasin group for lake-types\n')
             f.write(':SubBasinGroup   AllLakeSubbasins\n')
