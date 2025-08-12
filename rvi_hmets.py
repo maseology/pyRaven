@@ -36,7 +36,7 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
 
         f.write(':SoilModel            SOIL_TWO_LAYER\n\n') # Two soil layers
 
-        f.write(':AllowSoilOverfill\n\n') # soils may be filled beyond their maximum storage capacity, generally recommended for the HMETS model
+        # f.write(':AllowSoilOverfill\n\n') # soils may be filled beyond their maximum storage capacity, generally recommended for the HMETS model
 
         f.write(':Alias VADOSE_ZONE    SOIL[0]\n')
         f.write(':Alias PHREATIC_ZONE  SOIL[1]\n')

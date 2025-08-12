@@ -16,6 +16,23 @@ def write(root, nam, desc, builder, ver, wshd, hru, res, par):
         shutil.copyfile(root + nam + ".rvh", mmio.getFileDir(root) +"/" + nam + ".rvh.tpl")
         with open(mmio.getFileDir(root) +"/" + nam + ".rvh.tpl","a") as f:    
             f.write('# Set global sub-basin parameters  xLogMAX_PERC_RATE_MULT\n')
+
+            if len(wshd.zon)>0:
+                grps = [int(i) for i in list(set(wshd.zon.values()))]
+                grps.sort()
+                for g in grps:
+                    f.write('#  xLogGAMMA_SCALE1{0:03d} xLogGAMMA_SCALE2{0:03d}\n'.format(g))
+                for g in grps:
+                    f.write(':SBGroupPropertyOverride UserGroup{0:03d} GAMMA_SHAPE  xGAMMA_SHAPE1{0:03d}\n'.format(g))
+                    f.write(':SBGroupPropertyOverride UserGroup{0:03d} GAMMA_SCALE  xGAMMA_SCALE1{0:03d}\n'.format(g))
+                    f.write(':SBGroupPropertyOverride UserGroup{0:03d} GAMMA_SHAPE2 xGAMMA_SHAPE2{0:03d}\n'.format(g))
+                    f.write(':SBGroupPropertyOverride UserGroup{0:03d} GAMMA_SCALE2 xGAMMA_SCALE2{0:03d}\n'.format(g))                    
+            else:
+                f.write(':SBGroupPropertyOverride AllLandSubbasins GAMMA_SHAPE  xGAMMA_SHAPE1\n')
+                f.write(':SBGroupPropertyOverride AllLandSubbasins GAMMA_SCALE  xGAMMA_SCALE1\n')
+                f.write(':SBGroupPropertyOverride AllLandSubbasins GAMMA_SHAPE2 xGAMMA_SHAPE2\n')
+                f.write(':SBGroupPropertyOverride AllLandSubbasins GAMMA_SCALE2 xGAMMA_SCALE2\n')
+
             f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MAX_PERC_RATE xMAX_PERC_RATE_MULT\n')
             f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MANNINGS_N {}\n'.format(1.0))
             f.write(':SBGroupPropertyMultiplier  AllLakeSubbasins  RESERVOIR_CREST_WIDTH {}\n'.format(1.0))
@@ -23,6 +40,20 @@ def write(root, nam, desc, builder, ver, wshd, hru, res, par):
     else:
         with open(root + nam + ".rvh","a") as f:    
             f.write('# Set global sub-basin parameters\n')
+            if len(wshd.zon)>0:
+                grps = [int(i) for i in list(set(wshd.zon.values()))]
+                grps.sort()
+                for g in grps:
+                    f.write(':SBGroupPropertyOverride UserGroup{:03d} GAMMA_SHAPE  {}\n'.format(g,par.GAMMA_SHAPE))
+                    f.write(':SBGroupPropertyOverride UserGroup{:03d} GAMMA_SCALE  {}\n'.format(g,par.GAMMA_SCALE))
+                    f.write(':SBGroupPropertyOverride UserGroup{:03d} GAMMA_SHAPE2 {}\n'.format(g,par.GAMMA_SHAPE2))
+                    f.write(':SBGroupPropertyOverride UserGroup{:03d} GAMMA_SCALE2 {}\n'.format(g,par.GAMMA_SCALE2))
+            else:
+                f.write(':SBGroupPropertyOverride AllLandSubbasins GAMMA_SHAPE  {}\n'.format(par.GAMMA_SHAPE))
+                f.write(':SBGroupPropertyOverride AllLandSubbasins GAMMA_SCALE  {}\n'.format(par.GAMMA_SCALE))
+                f.write(':SBGroupPropertyOverride AllLandSubbasins GAMMA_SHAPE2 {}\n'.format(par.GAMMA_SHAPE2))
+                f.write(':SBGroupPropertyOverride AllLandSubbasins GAMMA_SCALE2 {}\n'.format(par.GAMMA_SCALE2))
+                
             f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MAX_PERC_RATE {}\n'.format(par.MAX_PERC_RATE_MULT))
             f.write('#:SBGroupPropertyMultiplier  AllLandSubbasins  MANNINGS_N {}\n'.format(1.0))
             f.write('#:SBGroupPropertyMultiplier  AllLakeSubbasins  RESERVOIR_CREST_WIDTH {}\n'.format(1.0))

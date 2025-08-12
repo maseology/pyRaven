@@ -12,11 +12,10 @@ def writeDDS(root, nam, wshd, hru, res, nsmpl=10):
     shutil.copy("E:/Sync/@dev/Raven-bin/"+ofn,root+ofn)
 
     haslakes=False
-    if haslakes: 
-        for ihru in hru.hrus.keys():
-            if wshd.lak[ihru]:
-                haslakes = True
-                break
+    for ihru in hru.hrus.keys():
+        if wshd.lak[ihru]:
+            haslakes = True
+            break
 
     with open(root+nam+'-Ostrich.bat','w') as f:
         f.write("""@ECHO OFF
@@ -110,10 +109,19 @@ EndExtraDirs""")
 
         f.write('  #\n')
         f.write('  # Routing\n')
-        f.write('  xGAMMA_SHAPE1                random     0.0        10    none   none    none\n')
-        f.write('  xLogGAMMA_SCALE1                0.0      -4       2.2    none   none    none  # (tied)\n')
-        f.write('  xGAMMA_SHAPE2                random     0.0        10    none   none    none\n')
-        f.write('  xLogGAMMA_SCALE2                0.0      -4         2    none   none    none  # (tied)\n')
+        if len(wshd.zon)>0:
+            grps = [int(i) for i in list(set(wshd.zon.values()))]
+            grps.sort()
+            for g in grps:
+                f.write('  xGAMMA_SHAPE1{0:03d}             random     0.0        10    none   none    none\n'.format(g))
+                f.write('  xLogGAMMA_SCALE1{0:03d}             0.0     0.0       5.0    none   none    none\n'.format(g))
+                f.write('  xGAMMA_SHAPE2{0:03d}             random     0.0        10    none   none    none\n'.format(g))
+                f.write('  xLogGAMMA_SCALE2{0:03d}             0.0     0.0       5.0    none   none    none\n'.format(g))                
+        else:
+            f.write('  xGAMMA_SHAPE1                random     0.0        10    none   none    none\n')
+            f.write('  xLogGAMMA_SCALE1                0.0      -4       2.2    none   none    none  # (tied)\n')
+            f.write('  xGAMMA_SHAPE2                random     0.0        10    none   none    none\n')
+            f.write('  xLogGAMMA_SCALE2                0.0      -4         2    none   none    none  # (tied)\n')
         f.write('  #\n')
         f.write('  # Interception\n')
         f.write('  xRAIN_ICEPT_FACT             random     0.0       1.0    none   none    none\n')
@@ -133,13 +141,13 @@ EndExtraDirs""")
                 if stpl[:6]=="Medium" and len(stpl)>6: stpl=stpl.replace("Medium","M")            
                 f.write('  xiflw{:<22}    random     0.0       1.0    none   none    none\n'.format(stpl))
         else:
-            f.write('  xinterflow                 random     0.0       1.0    none   none    none\n')
+            f.write('  xinterflow                   random     0.0       1.0    none   none    none\n')
             for st in set([v for v in dsg]):
                 if st=='LAKE': continue
                 stpl = st
                 if stpl[:3]=="Low" and len(stpl)>3: stpl=stpl.replace("Low","L")
                 if stpl[:6]=="Medium" and len(stpl)>6: stpl=stpl.replace("Medium","M")            
-                f.write('  xbf{:<20}    random     0.0       1.0    none   none    none\n'.format(stpl))
+                f.write('  xbf{:<20}      random     0.0       1.0    none   none    none\n'.format(stpl))
 
         if wshd.haschans:
             f.write('  #\n')
@@ -166,8 +174,15 @@ EndExtraDirs""")
         f.write('BeginTiedParams\n')
         f.write('  # logarithm, base 10 (pl = 10^p)\n')
         f.write('  xMAX_PERC_RATE_MULT  1   xLogMAX_PERC_RATE_MULT  exp  10.0  1.0  1.0  0.0  free\n')
-        f.write('  xGAMMA_SCALE1        1   xLogGAMMA_SCALE1        exp  10.0  1.0  1.0  0.0  free\n')
-        f.write('  xGAMMA_SCALE2        1   xLogGAMMA_SCALE2        exp  10.0  1.0  1.0  0.0  free\n')
+        if len(wshd.zon)>0:
+            grps = [int(i) for i in list(set(wshd.zon.values()))]
+            grps.sort()
+            for g in grps:
+                f.write('  xGAMMA_SCALE1{0:03d}     1   xLogGAMMA_SCALE1{0:03d}     exp  10.0  1.0  1.0  0.0  free\n'.format(g))
+                f.write('  xGAMMA_SCALE2{0:03d}     1   xLogGAMMA_SCALE2{0:03d}     exp  10.0  1.0  1.0  0.0  free\n'.format(g))                
+        else:
+            f.write('  xGAMMA_SCALE1        1   xLogGAMMA_SCALE1        exp  10.0  1.0  1.0  0.0  free\n')
+            f.write('  xGAMMA_SCALE2        1   xLogGAMMA_SCALE2        exp  10.0  1.0  1.0  0.0  free\n')
         f.write('EndTiedParams\n')
         
 

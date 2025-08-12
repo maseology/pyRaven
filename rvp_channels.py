@@ -75,7 +75,7 @@ def default8point(root, nam, wshd):
                         exit()   
                     if s.chanrough <= 0: s.chanrough = 0.035
                     if s.valleywidth <= 0: s.valleywidth = 2.5*s.chanwidth
-                    if s.floodplrough <= 0: s.floodplrough = 0.1
+                    if s.floodplrough <= 0: s.floodplrough = 0.123
 
                     stinfo = 'Ag{:2.0f}%; Nat{:2.0f}%; Urb{:2.0f}%'.format(wshd.info[t][0], wshd.info[t][1], wshd.info[t][2])
                     grad = math.tan(s.slp) # (convert angle to rise/run: "bed slope expressed as a slope ratio")
@@ -107,7 +107,10 @@ def default8point(root, nam, wshd):
                             f.write('   {:12.3f}{:>12}\n'.format(tw+2*bw+fpw+s.chanwidth, 'xNflood'))
                         else:
                             f.write('   {:12.3f}{:12.3f}\n'.format(0., s.floodplrough))
-                            f.write('   {:12.3f}{:12.3f}\n'.format(tw+fpw, s.chanrough))
+                            if wshd.info[t][2]>=25:
+                                f.write('   {:12.3f}{:12.5f}\n'.format(tw+fpw, 0.03567))
+                            else:
+                                f.write('   {:12.3f}{:12.3f}\n'.format(tw+fpw, s.chanrough))
                             f.write('   {:12.3f}{:12.3f}\n'.format(tw+2*bw+fpw+s.chanwidth, s.floodplrough))
                         f.write(' :EndRoughnessZones\n')
                         f.write(':EndChannelProfile\n\n')

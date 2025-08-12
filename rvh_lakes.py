@@ -19,7 +19,7 @@ def write(root, nam, desc, builder, ver, wshd, hru, hruid, res):
                 f.write(':Reservoir   Lake-{}  # {}\n'.format(t, wshd.nam[t]))
                 f.write('  :SubBasinID          {}\n'.format(t))
                 f.write('  :HRUID               {}\n'.format(hruid[t]))
-                f.write('  :Type RESROUTE_STANDARD\n')
+                f.write('  :Type  RESROUTE_STANDARD\n')
                 f.write('  :WeirCoefficient      0.6\n')
                 if astpl:
                     f.write('  :CrestWidth          xCW{}\n'.format(wshd.nam[t].lower().replace('reservoir','').replace('-','')))

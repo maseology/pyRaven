@@ -121,43 +121,51 @@ def write(root, nam, desc, builder, ver, hru, par):
 
             f.write('# snow balance and infiltration parameters (HMETS):\n')
             f.write(':LandUseParameterList\n')
-            f.write(' :Parameters         MIN_MELT_FACTOR  MAX_MELT_FACTOR  DD_MELT_TEMP  DD_AGGRADATION  REFREEZE_FACTOR  DD_REFREEZE_TEMP  REFREEZE_EXP  HMETS_RUNOFF_COEFF\n')
-            f.write(' :Units                       mm/d/K           mm/d/K             C            1/mm           mm/d/K                 C          none                none\n') 
+            f.write(' :Parameters           LAKE_PET_CORR  MIN_MELT_FACTOR  MAX_MELT_FACTOR  DD_MELT_TEMP  DD_AGGRADATION  REFREEZE_FACTOR  DD_REFREEZE_TEMP  REFREEZE_EXP  HMETS_RUNOFF_COEFF\n')
+            f.write(' :Units                         none           mm/d/K           mm/d/K             C            1/mm           mm/d/K                 C          none                none\n') 
             # if astpl:
-            #     f.write('  [DEFAULT] {:>24}{:>17}{:>14}{:>16}{:>17}{:>18}{:>14}{:>20}\n'.format('xMIN_MELT_FACTOR', 'xMAX_MELT_FACTOR', 'xDD_MELT_TEMP', 'xDD_AGGRADATION', 'xREFREEZE_FACTOR', 'xDD_REFREEZE_TEMP', 'xREFREEZE_EXP', 'xHMETS_RUNOFF_COEFF'))
+            #     f.write('  [DEFAULT] {:>24}{:>17}{:>17}{:>14}{:>16}{:>17}{:>18}{:>14}{:>20}\n'.format('xLAKE_PET_CORR', 'xMIN_MELT_FACTOR', 'xMAX_MELT_FACTOR', 'xDD_MELT_TEMP', 'xDD_AGGRADATION', 'xREFREEZE_FACTOR', 'xDD_REFREEZE_TEMP', 'xREFREEZE_EXP', 'xHMETS_RUNOFF_COEFF'))
             # else:
-            #     f.write('  [DEFAULT] {:24}{:17}{:14}{:16}{:17}{:18}{:14}{:20}\n'.format(par.MIN_MELT_FACTOR, par.MAX_MELT_FACTOR, par.DD_MELT_TEMP, par.DD_AGGRADATION, par.REFREEZE_FACTOR, par.DD_REFREEZE_TEMP, par.REFREEZE_EXP, par.HMETS_RUNOFF_COEFF))
+            #     f.write('  [DEFAULT] {:24}{:>17}{:17}{:14}{:16}{:17}{:18}{:14}{:20}\n'.format(par.LAKE_PET_CORR, par.MIN_MELT_FACTOR, par.MAX_MELT_FACTOR, par.DD_MELT_TEMP, par.DD_AGGRADATION, par.REFREEZE_FACTOR, par.DD_REFREEZE_TEMP, par.REFREEZE_EXP, par.HMETS_RUNOFF_COEFF))
             if astpl:
-                f.write('  [DEFAULT] {:>24}{:>17}{:>14}{:>16}{:>17}{:>18}{:>14}{:>20}\n'.format('xMIN_MELT_FACTOR', 'xMAX_MELT_FACTOR', 'xDD_MELT_TEMP', 'xDD_AGGRADATION', 'xREFREEZE_FACTOR', 'xDD_REFREEZE_TEMP', 'xREFREEZE_EXP', 'xHMETS_RUNOFF_COEFF'))
+                f.write('  [DEFAULT] {:>24}{:>17}{:>17}{:>14}{:>16}{:>17}{:>18}{:>14}{:>20}\n'.format('xLAKE_PET_CORR', 'xMIN_MELT_FACTOR', 'xMAX_MELT_FACTOR', 'xDD_MELT_TEMP', 'xDD_AGGRADATION', 'xREFREEZE_FACTOR', 'xDD_REFREEZE_TEMP', 'xREFREEZE_EXP', 'xHMETS_RUNOFF_COEFF'))
                 for l in dlu: 
                     if l=='Agriculture':
-                        f.write('  {:25} _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT{:>20}\n'.format(l,'xAgRC'))
+                        f.write('  {:25} _DEFAULT         _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT{:>20}\n'.format(l,'xAgRC'))
                     elif l in ['Forest','Meadow','ShortVegetation','TallVegetation','SparseVegetation','DenseVegetation']:
-                        f.write('  {:25} _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT{:>20}\n'.format(l,'xNatRC'))                        
+                        f.write('  {:25} _DEFAULT         _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT{:>20}\n'.format(l,'xNatRC'))                        
                     elif l in ['Wetland','Swamp','Marsh','Channel','Waterbody','Lake']:
-                        f.write('  {:25} _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT{:>20}\n'.format(l,'xWetRC'))
+                        f.write('  {:25} _DEFAULT         _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT{:>20}\n'.format(l,'xWetRC'))
                     elif l=='noflow':
-                        f.write('  {:25} _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT{:>20}\n'.format(l,0.0))
+                        f.write('  {:25} _DEFAULT         _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT{:>20}\n'.format(l,0.0))
                     else: # elif l in ['Urban','Barren']:
-                        f.write('  {:25} _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT            _DEFAULT\n'.format(l))
+                        f.write('  {:25} _DEFAULT         _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT            _DEFAULT\n'.format(l))
             else:
-                f.write('  [DEFAULT] {:24}{:17}{:14}{:16}{:17}{:18}{:14}{:20}\n'.format(par.MIN_MELT_FACTOR, par.MAX_MELT_FACTOR, par.DD_MELT_TEMP, par.DD_AGGRADATION, par.REFREEZE_FACTOR, par.DD_REFREEZE_TEMP, par.REFREEZE_EXP, par.HMETS_RUNOFF_COEFF))
-                for l in dlu: f.write('  {:25} _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT            _DEFAULT\n'.format(l))
+                f.write('  [DEFAULT] {:24}{:17}{:17}{:14}{:16}{:17}{:18}{:14}{:20}\n'.format(par.LAKE_PET_CORR, par.MIN_MELT_FACTOR, par.MAX_MELT_FACTOR, par.DD_MELT_TEMP, par.DD_AGGRADATION, par.REFREEZE_FACTOR, par.DD_REFREEZE_TEMP, par.REFREEZE_EXP, par.HMETS_RUNOFF_COEFF))
+                for l in dlu: f.write('  {:25} _DEFAULT         _DEFAULT         _DEFAULT      _DEFAULT        _DEFAULT         _DEFAULT          _DEFAULT      _DEFAULT            _DEFAULT\n'.format(l))
             f.write(':EndLandUseParameterList\n\n')
 
-            if astpl:
-                f.write('# routing parameters:  xLogGAMMA_SCALE1 xLogGAMMA_SCALE2\n')
-            else:
-                f.write('# routing parameters:\n')
+            # if astpl:
+            #     f.write('# routing parameters:  xLogGAMMA_SCALE1 xLogGAMMA_SCALE2\n')
+            # else:
+            #     f.write('# routing parameters:\n')
+            # f.write(':LandUseParameterList\n')
+            # f.write(' :Parameters           LAKE_PET_CORR   GAMMA_SHAPE   GAMMA_SCALE  GAMMA_SHAPE2  GAMMA_SCALE2\n')
+            # f.write(' :Units                         none          none          none          none          none\n')
+            # if astpl:
+            #     f.write('  [DEFAULT] {:>24}{:>14}{:>14}{:>14}{:>14}\n'.format('xLAKE_PET_CORR' , 'xGAMMA_SHAPE1', 'xGAMMA_SCALE1', 'xGAMMA_SHAPE2', 'xGAMMA_SCALE2')) 
+            # else:
+            #     f.write('  [DEFAULT] {:24}{:14}{:14}{:14}{:14}\n'.format(par.LAKE_PET_CORR , par.GAMMA_SHAPE, par.GAMMA_SCALE, par.GAMMA_SHAPE2, par.GAMMA_SCALE2)) 
+            # f.write(':EndLandUseParameterList\n\n')
+            f.write('# routing parameters: (Note: these parameters are overwritten globally in the .rvh file)\n')
             f.write(':LandUseParameterList\n')
-            f.write(' :Parameters           LAKE_PET_CORR   GAMMA_SHAPE   GAMMA_SCALE  GAMMA_SHAPE2  GAMMA_SCALE2\n')
-            f.write(' :Units                         none          none          none          none          none\n')
+            f.write(' :Parameters          GAMMA_SHAPE   GAMMA_SCALE  GAMMA_SHAPE2  GAMMA_SCALE2\n')
+            f.write(' :Units                      none          none          none          none\n')
             if astpl:
-                f.write('  [DEFAULT] {:>24}{:>14}{:>14}{:>14}{:>14}\n'.format('xLAKE_PET_CORR' , 'xGAMMA_SHAPE1', 'xGAMMA_SCALE1', 'xGAMMA_SHAPE2', 'xGAMMA_SCALE2')) 
+                f.write('  [DEFAULT] {:21}{:14}{:14}{:14}\n'.format(par.GAMMA_SHAPE, par.GAMMA_SCALE, par.GAMMA_SHAPE2, par.GAMMA_SCALE2)) 
             else:
-                f.write('  [DEFAULT] {:24}{:14}{:14}{:14}{:14}\n'.format(par.LAKE_PET_CORR , par.GAMMA_SHAPE, par.GAMMA_SCALE, par.GAMMA_SHAPE2, par.GAMMA_SCALE2)) 
+                f.write('  [DEFAULT] {:21}{:14}{:14}{:14}\n'.format(par.GAMMA_SHAPE, par.GAMMA_SCALE, par.GAMMA_SHAPE2, par.GAMMA_SCALE2)) 
             f.write(':EndLandUseParameterList\n\n')
-
 
             f.write('# interception parameters:\n')
             f.write(':VegetationParameterList\n')
@@ -185,13 +193,13 @@ def write(root, nam, desc, builder, ver, hru, par):
             f.write('# groundwater parameters:\n')
             sxgrDay = {x: y/365.24 for x, y in sgxr.items()} # convert from mm/yr to mm/d
             f.write(':SoilParameterList\n')
-            f.write(' :Parameters                 POROSITY  PET_CORRECTION   MAX_PERC_RATE  BASEFLOW_COEFF\n')
-            f.write(' :Units                          none            mm/d            mm/d             1/d\n')
+            f.write(' :Parameters                 POROSITY  PET_CORRECTION   MAX_PERC_RATE      BASEFLOW_COEFF\n')
+            f.write(' :Units                          none            mm/d            mm/d                 1/d\n')
             if flg.gwzonemode:
                 if astpl:
-                    f.write('  [DEFAULT]                       1.0{:>16}             1.0 {:>16}\n'.format('xPET_CORRECTION', 'xiflwUnknown'))      
+                    f.write('  [DEFAULT]                       1.0{:>16}             1.0 {:>20}\n'.format('xPET_CORRECTION', 'xiflwUnknown'))      
                 else:
-                    f.write('  [DEFAULT]                       1.0{:16}             1.0 {:16}\n'.format(par.PET_CORRECTION, par.INTERFLOW_COEFF))      
+                    f.write('  [DEFAULT]                       1.0{:16}             1.0 {:20}\n'.format(par.PET_CORRECTION, par.INTERFLOW_COEFF))      
                 for s in dsg:
                     if s=='LAKE':continue
                     ss = s[0]+str(s[1])
@@ -200,26 +208,26 @@ def write(root, nam, desc, builder, ver, hru, par):
                         if stpl[:3]=="Low" and len(stpl)>3: stpl=stpl.replace("Low","L")
                         if stpl[:6]=="Medium" and len(stpl)>6: stpl=stpl.replace("Medium","M")
                         f.write('  {:25}  _DEFAULT        _DEFAULT{:16.3f}     xiflw{}\n'.format(ss + 'VADOSE ',sxgrDay[s[0]],stpl)) 
-                        f.write('  {:25}  _DEFAULT             0.0             0.0 {:16}\n'.format(ss + 'PHREATIC', 'xBASEFLOW_COEFF'+str(s[1])))
+                        f.write('  {:25}  _DEFAULT             0.0             0.0 {:20}\n'.format(ss + 'PHREATIC', 'xBASEFLOW_COEFF'+str(s[1])))
                     else:
                         f.write('  {:25}  _DEFAULT        _DEFAULT{:16.3f}         _DEFAULT\n'.format(ss + 'VADOSE ',sxgrDay[s[0]])) 
-                        f.write('  {:25}  _DEFAULT             0.0             0.0 {:16.3f}\n'.format(ss + 'PHREATIC', par.BASEFLOW_COEFF))
+                        f.write('  {:25}  _DEFAULT             0.0             0.0 {:20.3f}\n'.format(ss + 'PHREATIC', par.BASEFLOW_COEFF))
             else:
                 if astpl:
-                    f.write('  [DEFAULT]                       1.0{:>16}             1.0           0.001\n'.format('xPET_CORRECTION'))
+                    f.write('  [DEFAULT]                       1.0{:>16}             1.0               0.001\n'.format('xPET_CORRECTION'))
                 else:
-                    f.write('  [DEFAULT]                       1.0{:16}             1.0{:16}\n'.format(par.PET_CORRECTION, par.BASEFLOW_COEFF))      
+                    f.write('  [DEFAULT]                       1.0{:16}             1.0{:20}\n'.format(par.PET_CORRECTION, par.BASEFLOW_COEFF))      
                 for s in dsg: 
                     if s=='LAKE':continue
                     if astpl:
                         stpl = s
                         if stpl[:3]=="Low" and len(stpl)>3: stpl=stpl.replace("Low","L")
                         if stpl[:6]=="Medium" and len(stpl)>6: stpl=stpl.replace("Medium","M")                
-                        f.write('  {:25}  _DEFAULT        _DEFAULT{:16.3f}{:>16}\n'.format(s + 'VADOSE ',sxgrDay[s], 'xinterflow')) 
-                        f.write('  {:25}  _DEFAULT             0.0             0.0 {:>15}\n'.format(s + 'PHREATIC', 'xbf'+stpl))
+                        f.write('  {:25}  _DEFAULT        _DEFAULT{:16.3f}{:>20}\n'.format(s + 'VADOSE ',sxgrDay[s], 'xinterflow')) 
+                        f.write('  {:25}  _DEFAULT             0.0             0.0 {:>19}\n'.format(s + 'PHREATIC', 'xbf'+stpl))
                     else:
-                        f.write('  {:25}  _DEFAULT        _DEFAULT{:16.3f}{:16.3f}\n'.format(s + 'VADOSE ',sxgrDay[s], par.INTERFLOW_COEFF)) 
-                        f.write('  {:25}  _DEFAULT             0.0             0.0        _DEFAULT\n'.format(s + 'PHREATIC'))
+                        f.write('  {:25}  _DEFAULT        _DEFAULT{:16.3f}{:20.3f}\n'.format(s + 'VADOSE ',sxgrDay[s], par.INTERFLOW_COEFF)) 
+                        f.write('  {:25}  _DEFAULT             0.0             0.0            _DEFAULT\n'.format(s + 'PHREATIC'))
             f.write(':EndSoilParameterList\n\n')
 
     write_rvp(root + nam + ".rvp", False)
