@@ -10,7 +10,7 @@ def build(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb
     mmio.mkDir(root + "output")
     rvi_hbv.write(root, nam, builder, ver, dtb, dte, res, ts) # model structure
     rvh_hbv.write(root, nam, desc, builder, ver, wshd, hrus, res, params) # HRUs
-    rvp_hbv.write(root, nam, desc, builder, ver, hrus, params) # parameters
+    rvp_hbv.write(root, nam, desc, builder, ver, wshd, hrus, params) # parameters
     rvp_channels.write(root, nam, wshd)
     rvc_hbv.write(root, nam, desc, builder, ver, hrus, res) # initial conditions
     rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd, hrus, ts) # temporal forcing files
@@ -34,7 +34,7 @@ def buildSubmodel(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP,
         print(' submodel mode: model reduced from {} to {} subbasins'.format(len(wshd.xr),len(hrus.hrus)))
         rvi_hbv.write(root, nam, builder, ver, dtb, dte, res, ts)
         rvh_hbv.write(root, nam, desc, builder, ver, wshd2, hrus, res, params)
-        rvp_hbv.write(root, nam, desc, builder, ver, hrus, params) # parameters
+        rvp_hbv.write(root, nam, desc, builder, ver, wshd, hrus, params) # parameters
         rvp_channels.write(root, nam, wshd2)
         rvc_hbv.write(root, nam, desc, builder, ver, hrus, res) # initial conditions
         rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd2, hrus, ts) # temporal forcing files
@@ -64,7 +64,7 @@ def buildGaugedSubmodels(root0, root, nam, desc, builder, ver, wshd, hrus, res, 
         hrus.zga = zga2
         rvi_hbv.write(subroot, subnam, builder, ver, dtb, dte, res, ts)
         rvh_hbv.write(subroot, subnam, desc, builder, ver, wshd2, hrus, res, params)
-        rvp_hbv.write(subroot, subnam, desc, builder, ver, hrus, params) # parameters
+        rvp_hbv.write(subroot, subnam, desc, builder, ver, wshd2, hrus, params) # parameters
         rvp_channels.write(subroot, subnam, wshd2)
         rvc_hbv.write(subroot, subnam, desc, builder, ver, hrus, res)   
         rvt_OWRCapi.write(subroot, subnam, desc, builder, ver, wshd2, hrus, ts, submdl=True) # temporal forcing files)
@@ -74,8 +74,7 @@ def buildGaugedSubmodels(root0, root, nam, desc, builder, ver, wshd, hrus, res, 
         batchfile.write(subroot, subnam, ver)    
 
     mmio.deletefile(root + nam + ".rvt")
-    mmio.deletefile(root + 'GaugeWeightTable.txt')
-
+    mmio.deletefile(root + nam + '-GaugeWeightTable.txt')
 
 def buildLumped(root, nam, desc, builder, ver, wshd, params, ts, dtb, dte):
     # full model domain

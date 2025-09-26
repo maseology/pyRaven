@@ -76,13 +76,13 @@ EndExtraDirs""")
         f.write('  #\n')
         f.write('  # Global\n')
         f.write('  xTop                         random     0.1       0.5    none   none    none\n')  # FC
-        f.write('  xFast                        random     0.1       2.0    none   none    none\n')
-        f.write('  xSlow                        random     0.1       2.0    none   none    none\n')
+        # f.write('  xFast                        random     0.1       2.0    none   none    none\n')
+        # f.write('  xSlow                        random     0.1       2.0    none   none    none\n')
         f.write('  xAgImprv                     random     0.0       1.0    none   none    none\n')
         f.write('  xRAINSNOW_TEMP               random    -2.0       4.0    none   none    none\n')
         if flg.preciponly: f.write('  xRAINSNOW_DELTA              random     1.0      20.0    none   none    none\n')
         f.write('  xSNOW_SWI                    random    0.01      0.12    none   none    none\n')
-        f.write('  xLogMAX_PERC_RATE_MULT       random      -2         2    none   none    none  # global multiplier (tied)\n')
+        # f.write('  xLogMAX_PERC_RATE_MULT       random      -2         2    none   none    none  # global multiplier (tied)\n')
         f.write('  #\n')
         f.write('  # Landuse\n')
         f.write('  xMELT_FACTOR                 random     0.0      18.0    none   none    none\n')
@@ -92,7 +92,7 @@ EndExtraDirs""")
         f.write('  xHBV_BETA                    random     0.0      10.0    none   none    none\n')
         f.write('  xFIELD_CAPACITY              random     0.0       1.0    none   none    none\n') # LP (assuming SAT_WILT=0)
         f.write('  xMAX_CAP_RISE_RATE           random     0.0      50.0    none   none    none\n')
-        f.write('  xBASEFLOW_N                  random     1.0      10.0    none   none    none\n')
+        f.write('  xSTORAGE_THRESHOLD           random     0.0      25.0    none   none    none\n')
 
         # # runoff coefficients:
         # f.write('  xHMETS_RUNOFF_COEFF          random     0.0       1.0    none   none    none\n')
@@ -128,6 +128,7 @@ EndExtraDirs""")
         f.write('  #\n')
 
         f.write('  # Baseflow\n')
+        f.write('  xBASEFLOW_N                  random     1.0      10.0    none   none    none  # applies only to urban HRUs\n') 
         if flg.gwzonemode:
             for zone in sorted(set(wshd.zon.values())):
                 f.write('  xBASEFLOW_COEFF{}             random     0.0       1.0    none   none    none\n'.format(zone))
@@ -138,19 +139,23 @@ EndExtraDirs""")
                 if stpl[:6]=="Medium" and len(stpl)>6: stpl=stpl.replace("Medium","M")            
                 f.write('  xiflw{:<22}    random     0.0       1.0    none   none    none\n'.format(stpl))
         else:
-            f.write('  xinterflow                   random     0.0       1.0    none   none    none\n')
+            # f.write('  xinterflow                   random     0.0       1.0    none   none    none\n')
             for st in set([v for v in dsg]):
                 if st=='LAKE': continue
                 stpl = st
                 if stpl[:3]=="Low" and len(stpl)>3: stpl=stpl.replace("Low","L")
                 if stpl[:6]=="Medium" and len(stpl)>6: stpl=stpl.replace("Medium","M")            
-                f.write('  xbf{:<20}      random     0.0       1.0    none   none    none\n'.format(stpl))
+                f.write('  xk{:<20}       random     0.0       1.0    none   none    none\n'.format(stpl))
+            if len(wshd.zon)>0:
+                grps = [int(i) for i in list(set(wshd.zon.values()))]
+                grps.sort()
+                for g in grps: f.write('  xbf{:03d}                       random    0.85       1.0    none   none    none\n'.format(g))
 
         if wshd.haschans:
             f.write('  #\n')
             f.write('  # channels roughness\n')
             # f.write('  #pNagriculture                0.035    0.01       0.5    none   none    none  # Manning\'s N, mostly agriculture (>60%)\n')
-            f.write('  xNurban                       0.035    0.01       0.2    none   none    none  # Manning\'s N, some urban (>25%)\n')
+            f.write('  xNurban                       0.035    0.01       0.2    none   none    none  # Manning\'s N, urban cover >25%\n')
             f.write('  xNnatural                     0.035    0.01       0.8    none   none    none\n')
             f.write('  xNflood                         0.1    0.01       0.5    none   none    none\n')
 
@@ -170,7 +175,7 @@ EndExtraDirs""")
         f.write('\n')
         f.write('BeginTiedParams\n')
         f.write('  # logarithm, base 10 (pl = 10^p)\n')
-        f.write('  xMAX_PERC_RATE_MULT   1   xLogMAX_PERC_RATE_MULT  exp     10.0  1.0  1.0  0.0  free\n')
+        # f.write('  xMAX_PERC_RATE_MULT   1   xLogMAX_PERC_RATE_MULT  exp     10.0  1.0  1.0  0.0  free\n')
         if len(wshd.zon)>0:
             grps = [int(i) for i in list(set(wshd.zon.values()))]
             grps.sort()

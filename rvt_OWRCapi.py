@@ -69,15 +69,21 @@ def writeGaugeWeightTable(root, nam, wshd, hru):
             xr[t]=c
             c += 1
         return xr
-    xr = buildXR()
-    ng=len(hru.hrus)
+    xr = buildXR()    
+    ng = len(hru.hrus)
     with open(root + nam + "-GaugeWeightTable.txt","w") as f:
         f.write(':GaugeWeightTable\n')
         f.write(' {} {}\n'.format(ng,hru.nhru))
-        for t,a in hru.hrus.items():
+        for t,lusg in hru.hrus.items():
+            if lusg=='lake':
+                a = [0.] * ng
+                a[xr[t]] = 1.
+                f.write(' ' + ' '.join([str(v) for v in a]) + '\n')
+        for t,lusg in hru.hrus.items():
+            if lusg=='lake': continue
             a = [0.] * ng
-            a[xr[t]] = 1.            
-            for _ in a:
+            a[xr[t]] = 1.
+            for _ in lusg: 
                 f.write(' ' + ' '.join([str(v) for v in a]) + '\n')
         f.write(':EndGaugeWeightTable\n')
     # c = 0
@@ -95,7 +101,7 @@ def writeGaugeWeightTable(root, nam, wshd, hru):
 
 # build Time Series Input file (.rvt)
 def write(root, nam, desc, builder, ver, wshd, hru, ts, submdl=False):
-    # writeGaugeWeightTable(root, nam, wshd, hru)
+    writeGaugeWeightTable(root, nam, wshd, hru)
     indir = 'input'
     if submdl: indir = '..\\'+indir
     with open(root + nam + ".rvt","w") as f:

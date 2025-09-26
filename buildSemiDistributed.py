@@ -33,7 +33,7 @@ def __semidistributedCollect(ins, xrlu, xrsg):
                 print('    Raven built with calibration/MC optimizations:')
                 print('      - Silent mode')
                 print('      - Adds global parameter adjusters')
-                print('      - Only models gauged subbasins\n')
+                print('      - Only models gauged sub-basins\n')
                 mmio.mkDir(root0 + nam + ins.sfx + "_CALIB\\")
                 return root0 + nam + ins.sfx + "_CALIB\\model\\", True
         return root0 + nam + ins.sfx + "\\", False

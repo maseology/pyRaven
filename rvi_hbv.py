@@ -23,6 +23,8 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
             f.write(':TimeStep  {}'.format(intvl/86400) + '\n\n')
 
         # :Method
+        # f.write(':InterpolationMethod  INTERP_NEAREST_NEIGHBOR\n') # INTERP_NEAREST_NEIGHBOR is default
+        f.write(':InterpolationMethod  INTERP_FROM_FILE  {}\n'.format(nam + "-GaugeWeightTable.txt"))
         f.write(':PotentialMeltMethod  POTMELT_DEGREE_DAY\n')
         if flg.preciponly:
             f.write(':RainSnowFraction     RAINSNOW_HBV\n')
@@ -31,7 +33,6 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write(':Evaporation          PET_HARGREAVES_1985\n')
         f.write(':OW_Evaporation       PET_HARGREAVES_1985\n')
         f.write(':PrecipIceptFract     PRECIP_ICEPT_LAI\n')
-        # f.write(':InterpolationMethod  INTERP_NEAREST_NEIGHBOR\n') # INTERP_NEAREST_NEIGHBOR is default
         f.write(':CatchmentRoute       ROUTE_TRI_CONVOLUTION\n')
         f.write(':Routing              ROUTE_DIFFUSIVE_WAVE\n\n') # ROUTE_HYDROLOGIC\n')        
 
@@ -64,7 +65,7 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write(':Alias                FAST_RESERVOIR SOIL[1]\n')
         f.write(':Alias                SLOW_RESERVOIR SOIL[2]\n')
         f.write(':LakeStorage          SLOW_RESERVOIR\n')
-        f.write(':DefineHRUGroups  LakeHRUs  LandHRUs\n\n')
+        f.write(':DefineHRUGroups      LakeHRUs  LandHRUs\n\n')
 
 
         f.write('\n# hydrologic process order for HBV emulation\n')
@@ -90,7 +91,10 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write(' :Flush                    RAVEN_DEFAULT        FAST_RESERVOIR   SLOW_RESERVOIR    0.05\n')
         f.write('  :-->Conditional LAND_CLASS IS Urban\n')
         # f.write(' :Baseflow                 BASE_THRESH_POWER    FAST_RESERVOIR   SURFACE_WATER\n') # HBV-light
+        f.write(' :Baseflow                 BASE_THRESH_STOR     FAST_RESERVOIR   SURFACE_WATER\n') # alternative: used to enhance recharge
+        f.write('  :-->Conditional LAND_CLASS IS_NOT Urban\n')
         f.write(' :Baseflow                 BASE_POWER_LAW       FAST_RESERVOIR   SURFACE_WATER\n')
+        f.write('  :-->Conditional LAND_CLASS IS Urban\n')
         f.write(' :Baseflow                 BASE_LINEAR          SLOW_RESERVOIR   SURFACE_WATER\n')
         # f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         FAST_RESERVOIR    1.0\n')
         # f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         SLOW_RESERVOIR    1.0\n')
@@ -107,7 +111,7 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write('\n{}:WriteMassBalanceFile\n'.format(cmnt))
         # f.write('\n{}:WriteExhaustiveMB\n'.format(cmnt))        
         f.write('{}:WriteForcingFunctions\n'.format(cmnt))
-        f.write('\n# output waterbudgets\n')
+        f.write('\n{}# output waterbudgets\n'.format(cmnt))
         # f.write('\n{}:WriteNetCDFFormat\n'.format(cmnt))
 
         f.write('{}:CustomOutput MONTHLY CUMULSUM  PRECIP                                    BY_HRU\n'.format(cmnt))   # monthly precipitation by hru

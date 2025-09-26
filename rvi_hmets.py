@@ -23,14 +23,15 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
             f.write(':TimeStep  {}'.format(intvl/86400) + '\n\n')
 
         # :Method
+        # f.write(':InterpolationMethod  INTERP_NEAREST_NEIGHBOR\n') # INTERP_NEAREST_NEIGHBOR is default
+        f.write(':InterpolationMethod  INTERP_FROM_FILE  {}\n'.format(nam + "-GaugeWeightTable.txt"))
         f.write(':PotentialMeltMethod  POTMELT_HMETS\n')
         if flg.preciponly:
             f.write(':RainSnowFraction     RAINSNOW_HBV\n')
         else:
             f.write(':RainSnowFraction     RAINSNOW_DATA\n')
         f.write(':Evaporation          PET_HARGREAVES_1985\n') # PET_OUDIN used in HMETS
-        f.write(':PrecipIceptFract     PRECIP_ICEPT_LAI\n')
-        # f.write(':InterpolationMethod  INTERP_FROM_FILE  {}\n'.format(nam + "-GaugeWeightTable.txt"))
+        f.write(':PrecipIceptFract     PRECIP_ICEPT_LAI\n')        
         f.write(':CatchmentRoute       ROUTE_GAMMA_CONVOLUTION\n')
         f.write(':Routing              ROUTE_DIFFUSIVE_WAVE\n\n')
 

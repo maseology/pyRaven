@@ -15,7 +15,7 @@ def write(root, nam, desc, builder, ver, wshd, hru, res, par):
     if flg.calibrationmode:
         shutil.copyfile(root + nam + ".rvh", mmio.getFileDir(root) +"/" + nam + ".rvh.tpl")
         with open(mmio.getFileDir(root) +"/" + nam + ".rvh.tpl","a") as f:    
-            f.write('# Set global sub-basin parameters  xLogMAX_PERC_RATE_MULT\n')
+            f.write('# Set global sub-basin parameters\n') #  xLogMAX_PERC_RATE_MULT\n')
 
             if len(wshd.zon)>0:
                 grps = [int(i) for i in list(set(wshd.zon.values()))]
@@ -29,9 +29,9 @@ def write(root, nam, desc, builder, ver, wshd, hru, res, par):
                 f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_TO_PEAK xHalfTIME_CONC\n')
                 f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_LAG xTIME_LAG\n')
 
-            f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MAX_PERC_RATE xMAX_PERC_RATE_MULT\n')
-            f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MANNINGS_N {}\n'.format(1.0))
-            f.write(':SBGroupPropertyMultiplier  AllLakeSubbasins  RESERVOIR_CREST_WIDTH {}\n'.format(1.0))
+            # f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MAX_PERC_RATE xMAX_PERC_RATE_MULT\n')
+            # f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MANNINGS_N {}\n'.format(1.0))
+            # f.write(':SBGroupPropertyMultiplier  AllLakeSubbasins  RESERVOIR_CREST_WIDTH {}\n'.format(1.0))
             f.write('\n')
 
     else:
@@ -48,9 +48,9 @@ def write(root, nam, desc, builder, ver, wshd, hru, res, par):
                 f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_CONC {}\n'.format(par.TIME_CONC))
                 f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_TO_PEAK {}\n'.format(par.TIME_CONC/2))
                 f.write(':SBGroupPropertyOverride AllLandSubbasins TIME_LAG {}\n'.format(par.TIME_LAG))
-            f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MAX_PERC_RATE {}\n'.format(par.MAX_PERC_RATE_MULT))
-            f.write('#:SBGroupPropertyMultiplier  AllLandSubbasins  MANNINGS_N {}\n'.format(1.0))
-            f.write('#:SBGroupPropertyMultiplier  AllLakeSubbasins  RESERVOIR_CREST_WIDTH {}\n'.format(1.0))            
+            # f.write(':SBGroupPropertyMultiplier  AllLandSubbasins  MAX_PERC_RATE {}\n'.format(par.MAX_PERC_RATE_MULT))
+            # f.write('#:SBGroupPropertyMultiplier  AllLandSubbasins  MANNINGS_N {}\n'.format(1.0))
+            # f.write('#:SBGroupPropertyMultiplier  AllLakeSubbasins  RESERVOIR_CREST_WIDTH {}\n'.format(1.0))            
             f.write('\n')
 
 

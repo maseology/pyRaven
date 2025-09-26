@@ -53,6 +53,9 @@ class Params:
     MAX_SNOW_CAPACITY = 2.5
 
     # baseflow
+    # MAX_BASEFLOW_RATE = 250/365.24 # mm/d
+    # BASEFLOW_THRESH = .1
+    STORAGE_THRESHOLD = 1.0 # mm
     BASEFLOW_COEFF = 0.007
     BASEFLOW_N = 1.0
     INTERFLOW_COEFF = 0.04 # mm added
