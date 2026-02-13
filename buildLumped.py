@@ -1,10 +1,11 @@
 
 import os
+import pandas as pd
 from datetime import datetime, timedelta
 from timeit import default_timer as timer
 from pymmio import files as mmio
 from pyGrid.sws import Watershed, SWS
-from pyRaven import buildHBV, buildHMETS, ostrich_HBV, ostrich_HMETS, parameters
+from pyRaven import buildHBV, buildHMETS, buildGR4J, rvt_lumped, ostrich_HBV, ostrich_HMETS, ostrich_GR4J, parameters
 from pyRaven.flags import flg
 
 
@@ -131,3 +132,93 @@ def HBV(ins):
     endtime = str(timedelta(seconds=round(timer() - b0,0)))
     print('\ntotal elapsed time: ' + endtime)
 
+
+# the parsinonious GR4J model
+# Perrin, C., Michel, C., & Andréassian, V. (2003). Improvement of a parsimonious model for streamflow simulation. Journal of hydrology, 279(1-4), 275-289.
+def GR4J(ins):
+
+    stmsg = "=== Raven GR4J builder ==="
+    desc = ins.desc
+    print("\n" + "="*len(stmsg))
+    print(stmsg)
+    print("="*len(stmsg) + "\n")
+    if len(desc) > 0: print(desc) #"\n{}\n".format(desc))
+    b0 = timer()
+
+    # paths and notes
+    print("\n=== Gathering user options..")
+    root0 = ins.root
+    nam = ins.nam
+    now = datetime.now()
+    builder = 'M. Marchildon ' + now.strftime("%Y-%m-%d %H:%M:%S")
+    ver = "3.8"
+
+    if 'options' in ins.params:
+        if 'calibrationmode' in ins.params['options']:
+            print('\n ** Calibration Mode enabled ** ')
+            print('    Raven built with calibration/MC optimizations:')
+            print('      - Silent mode')
+            print('      - Adds global parameter adjusters')
+            print('      - Only models gauged subbasins\n')
+            mmio.mkDir(root0 + nam + ins.sfx + "_CALIB\\")
+            flg.calibrationmode = True
+            root = root0 + nam + ins.sfx + "_CALIB\\model\\" 
+        else:
+            root = root0 + nam + ins.sfx + "\\"
+
+    params = parameters.Params()
+    ts = 86400
+    if 'data' in ins.params:
+        dftem = ins.params['data']
+        dtb = min(dftem.index)
+        dte = max(dftem.index)
+    if 'dtb' in ins.params: dtb = ins.params['dtb']
+    if 'dte' in ins.params: dte = ins.params['dte']
+    flg.writemetfiles = not os.path.exists(root + "input")
+    # if 'timestep' in ins.params: ts = int(ins.params['timestep'])
+    if 'options' in ins.params:
+        if 'overwritetemporalfiles' in ins.params['options']:
+            flg.writemetfiles = ins.params['options']['overwritetemporalfiles']         
+        if 'preciponly' in ins.params['options']: 
+            flg.precipactive=False
+            flg.preciponly=True
+        if 'precipactive' in ins.params['options']: 
+            flg.precipactive=True
+            flg.preciponly=False
+    if 'parameters' in ins.params: # get parameters
+        params.set(ins.params['parameters'])
+
+    wshd = Watershed()
+    sws = SWS()
+    if 'carea' in ins.params: sws.km2 = ins.params['carea']
+    if 'elev' in ins.params: sws.elv = ins.params['elev']
+    if 'lat' in ins.params: sws.ylat = ins.params['lat']
+    if 'long' in ins.params: sws.xlng = ins.params['long']    
+    if 'slope' in ins.params: sws.slp = ins.params['slope']
+    if 'aspect' in ins.params: sws.asp = ins.params['aspect']
+    # if 'rchlen' in ins.params: sws.rchlen = ins.params['rchlen']    
+    wshd.s[1] = sws
+    hrus = None # hru.HRU()
+
+    mmio.mkDir(root)
+
+    print("\n\n=== Writing control files..")
+    buildGR4J.buildLumped(root, nam, desc, builder, ver, wshd, params, ts, dtb, dte)
+
+    print("\n\n=== Writing forcing files..")
+    if 'data' in ins.params: rvt_lumped.write(root, nam, desc, builder, ver, wshd, dftem)
+
+
+
+
+
+
+
+    # Copy Ostrich files and templates
+    if flg.calibrationmode: 
+        print('\n copying Ostrich templates..')
+        ostrich_GR4J.writeDDS(root0 + nam + ins.sfx + "_CALIB\\", nam, 5000)
+
+
+    endtime = str(timedelta(seconds=round(timer() - b0,0)))
+    print('\ntotal elapsed time: ' + endtime)

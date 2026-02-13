@@ -14,7 +14,7 @@ def build(root, nam, desc, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb
     rvp_channels.write(root, nam, wshd)
     rvc_hbv.write(root, nam, desc, builder, ver, hrus, res) # initial conditions
     rvt_OWRCapi.write(root, nam, desc, builder, ver, wshd, hrus, ts) # temporal forcing files
-    rvt_Obs.write(root, nam, wshd, obsFP) # temporal observation files        
+    rvt_Obs.write(root, nam, wshd, obsFP) # temporal observation files
     rvt_Res.write(root, nam, hrus, res)
     batchfile.write(root, nam, ver)
 
