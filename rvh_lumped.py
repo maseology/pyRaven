@@ -1,9 +1,6 @@
 
-import time
-from pyRaven.flags import flg
-
 # build lumped hru file (.rvh)
-def write(root, nam, desc, builder, ver, wshd):
+def write(root, nam, desc, builder, ver, wshd, withTerrain=False):
 
     with open(root + nam + ".rvh","w") as f:    
         f.write('# --------------------------------------------\n')
@@ -25,7 +22,7 @@ def write(root, nam, desc, builder, ver, wshd):
         f.write(':SubBasins\n')
         f.write(' :Attributes                               NAME  DOWNSTREAM_ID        PROFILE   REACH_LENGTH    GAUGED\n')
         f.write(' :Units                                    none           none           none             km      none\n')
-        f.write('  {:<10}{:>35}{:15}{:>15}{:15}{:10}\n'.format(1,nam,-1,'NONE','_AUTO',1))
+        f.write('  {:<10}{:>35}{:15}{:>15}{:>15}{:10}\n'.format(1,nam,-1,'NONE','_AUTO',1))
         f.write(':EndSubBasins\n\n')
 
 
@@ -46,7 +43,10 @@ def write(root, nam, desc, builder, ver, wshd):
         f.write(':HRUs\n')
         f.write(' :Attributes      AREA ELEVATION  LATITUDE LONGITUDE  BASIN_ID      LAND_USE_CLASS           VEG_CLASS        SOIL_PROFILE AQUIFER_PROFILE  TERRAIN_CLASS     SLOPE    ASPECT\n') # aspect deg CCWN (west=90°)
         f.write(' :Units            km2         m       deg       deg      none                none                none                none            none           none       deg      degN\n')
-        f.write('  {:<10}{:10.4f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(1,s.km2,s.elv,s.ylat,s.xlng,1,'luclass','vegclass','soilclass',s.slp,s.asp))
+        if withTerrain:
+            f.write('  {:<10}{:10.4f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]{:>15}{:10.3f}{:10.3f}\n'.format(1,s.km2,s.elv,s.ylat,s.xlng,1,'luclass','vegclass','soilclass','terclass',s.slp,s.asp))
+        else:
+            f.write('  {:<10}{:10.4f}{:10.1f}{:10.4f}{:10.4f}{:10}{:>20}{:>20}{:>20}          [NONE]         [NONE]{:10.3f}{:10.3f}\n'.format(1,s.km2,s.elv,s.ylat,s.xlng,1,'luclass','vegclass','soilclass',s.slp,s.asp))
         f.write(':EndHRUs\n\n')
 
         # f.write('####\n')

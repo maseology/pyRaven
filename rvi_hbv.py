@@ -23,15 +23,22 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
             f.write(':TimeStep  {}'.format(intvl/86400) + '\n\n')
 
         # :Method
-        # f.write(':InterpolationMethod  INTERP_NEAREST_NEIGHBOR\n') # INTERP_NEAREST_NEIGHBOR is default
-        f.write(':InterpolationMethod  INTERP_FROM_FILE  {}\n'.format(nam + "-GaugeWeightTable.txt"))
-        f.write(':PotentialMeltMethod  POTMELT_DEGREE_DAY\n')
-        if flg.preciponly:
-            f.write(':RainSnowFraction     RAINSNOW_HBV\n')
+        f.write(':InterpolationMethod  INTERP_NEAREST_NEIGHBOR\n') # INTERP_NEAREST_NEIGHBOR is default
+        # f.write(':InterpolationMethod  INTERP_FROM_FILE  {}\n'.format(nam + "-GaugeWeightTable.txt"))
+        if flg.preciprainmelt: 
+            f.write(':RainSnowFraction     RAINSNOW_THRESHOLD\n')
         else:
-            f.write(':RainSnowFraction     RAINSNOW_DATA\n')
-        f.write(':Evaporation          PET_HARGREAVES_1985\n')
-        f.write(':OW_Evaporation       PET_HARGREAVES_1985\n')
+            f.write(':PotentialMeltMethod  POTMELT_DEGREE_DAY\n')
+            if flg.preciponly:
+                f.write(':RainSnowFraction     RAINSNOW_HBV\n')
+            else:
+                f.write(':RainSnowFraction     RAINSNOW_DATA\n')
+
+        # f.write(':Evaporation          PET_HARGREAVES_1985\n')
+        # f.write(':OW_Evaporation       PET_HARGREAVES_1985\n')
+        f.write(':Evaporation          PET_OUDIN\n')
+        f.write(':OW_Evaporation       PET_OUDIN\n')
+
         f.write(':PrecipIceptFract     PRECIP_ICEPT_LAI\n')
         f.write(':CatchmentRoute       ROUTE_TRI_CONVOLUTION\n')
         f.write(':Routing              ROUTE_DIFFUSIVE_WAVE\n\n') # ROUTE_HYDROLOGIC\n')        
@@ -74,12 +81,13 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         #  MULTIPLE tag is a placeholder, indicating that there are more than one compartments either receiving water/energy/mass, or more than one losing.
         #         :ProcessName              ALGORITHM          {ProcessFrom}    {ProcessTo}
         # f.write('\n#                          ALGORITHM          ProcessFrom      ProcessTo\n')
-        f.write(' :SnowBalance              SNOBAL_SIMPLE_MELT   SNOW             SNOW_LIQ\n')
-        f.write('  :-->Overflow             RAVEN_DEFAULT        SNOW_LIQ         PONDED_WATER\n')        
-        f.write(' :SnowRefreeze             FREEZE_DEGREE_DAY    SNOW_LIQ         SNOW\n') 
+        if not flg.preciprainmelt:
+            f.write(' :SnowBalance              SNOBAL_SIMPLE_MELT   SNOW             SNOW_LIQ\n')
+            f.write('  :-->Overflow             RAVEN_DEFAULT        SNOW_LIQ         PONDED_WATER\n')        
+            f.write(' :SnowRefreeze             FREEZE_DEGREE_DAY    SNOW_LIQ         SNOW\n') 
         f.write(' :Precipitation            RAVEN_DEFAULT        ATMOS_PRECIP     MULTIPLE\n')
         f.write(' :CanopyEvaporation        CANEVP_ALL           CANOPY           ATMOSPHERE\n')
-        f.write(' :CanopySnowEvap           CANEVP_ALL           CANOPY_SNOW      ATMOSPHERE\n')
+        if not flg.preciprainmelt: f.write(' :CanopySnowEvap           CANEVP_ALL           CANOPY_SNOW      ATMOSPHERE\n')
         f.write(' :Infiltration             INF_HBV              PONDED_WATER     MULTIPLE\n')                                                         
         f.write(' :Flush                    RAVEN_DEFAULT        SURFACE_WATER    FAST_RESERVOIR\n')
         f.write('  :-->Conditional HRU_TYPE IS_NOT LAKE\n') # precip on the lake is assumed to be stored in the SURFACE_WATER store (which is where Raven puts precipitation on a lake). However, without revision, native HBV (which doesn’t have lakes) flushes this precip to some routing stores

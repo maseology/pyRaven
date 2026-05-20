@@ -23,7 +23,7 @@ def getDailyAPI(fp,lat=None,lng=None,cid=None):
     with open(fp,"w") as f:
         f.write(':MultiData\n')
         f.write(' {} {} {}\n'.format(dtb.strftime("%Y-%m-%d %H:%M:%S"), 1, len(df.index)))
-        if flg.preciponly:
+        if flg.preciponly or flg.preciprainmelt:
             f.write(' :Parameters  TEMP_MAX  TEMP_MIN    PRECIP\n')
             f.write(' :Units              C         C      mm/d\n')
         else:
@@ -34,6 +34,8 @@ def getDailyAPI(fp,lat=None,lng=None,cid=None):
             # NOTE: "+0"   https://stackoverflow.com/questions/11010683/how-to-have-negative-zero-always-formatted-as-positive-zero-in-a-python-string
             if flg.preciponly:
                 f.write('            {:>10.2f}{:>10.2f}{:>10.1f}\n'.format(round(row['Tx'],2)+0, round(row['Tn'],2)+0, row['Rf']+row['Sf']))
+            elif flg.preciprainmelt:
+                f.write('            {:>10.2f}{:>10.2f}{:>10.1f}\n'.format(round(row['Tx'],2)+0, round(row['Tn'],2)+0, row['Rf']+row['Sm']))
             else:
                 f.write('            {:>10.2f}{:>10.2f}{:>10.1f}{:>10.1f}\n'.format(round(row['Tx'],2)+0, round(row['Tn'],2)+0, row['Rf'], row['Sf']))       
             
@@ -78,13 +80,13 @@ def writeGaugeWeightTable(root, nam, wshd, hru):
             if lusg=='lake':
                 a = [0.] * ng
                 a[xr[t]] = 1.
-                f.write(' ' + ' '.join([str(v) for v in a]) + '\n')
+                f.write(' ' + ','.join([str(v) for v in a]) + '\n')
         for t,lusg in hru.hrus.items():
             if lusg=='lake': continue
             a = [0.] * ng
             a[xr[t]] = 1.
             for _ in lusg: 
-                f.write(' ' + ' '.join([str(v) for v in a]) + '\n')
+                f.write(' ' + ','.join([str(v) for v in a]) + '\n')
         f.write(':EndGaugeWeightTable\n')
     # c = 0
     # n = len(wshd.xr)

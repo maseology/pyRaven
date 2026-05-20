@@ -21,7 +21,7 @@ PAUSE>NUL""".format(ofn))
 
     with open(root+'ost_raven.bat','w') as f:
         f.write('@echo off\n\n')
-        f.write('copy {0}.rvh model\\{0}.rvh\n'.format(nam))
+        f.write('copy {0}.rvi model\\{0}.rvi\n'.format(nam))
         f.write('copy {0}.rvp model\\{0}.rvp\n'.format(nam))
         f.write('\ncd model\n')
         f.write('\n{1} {0} -o output\\\n\ncd ..'.format(nam,rfn))
@@ -55,15 +55,37 @@ BeginExtraDirs
 EndExtraDirs""")
 
         f.write('\nBeginFilePairs\n')
+        f.write('  {0}.rvi.tpl;  {0}.rvi\n'.format(nam))
         f.write('  {0}.rvp.tpl;  {0}.rvp\n'.format(nam))
         f.write('EndFilePairs\n')
-        
+
         f.write('\nBeginParams\n')
         f.write('  #parameter                    init.     low      high   tx_in tx_ost  tx_out\n')
-        f.write('  x1                           random     0.0       1.0    none   none    none\n')  # production zone soil depth [m]
-        f.write('  x2                           random     0.0      25.0    none   none    none\n')  # maximum groundwater exchange rate [mm/d]
-        f.write('  x3                           random     0.0    1000.0    none   none    none\n')  # baseflow reference storage [mm]
-        f.write('  x4                           random     0.0     100.0    none   none    none\n')  # transfer function parameter
+        f.write('  xBlndPET1                    random     0.0       1.0    none   none    none\n')
+        f.write('  xBlndPET2                    random     0.0       1.0    none   none    none\n')
+        f.write('  xBlndInf1                    random     0.0       1.0    none   none    none\n')
+        f.write('  xBlndInf2                    random     0.0       1.0    none   none    none\n')
+        f.write('  xBlndQF1                     random     0.0       1.0    none   none    none\n')
+        f.write('  xBlndQF2                     random     0.0       1.0    none   none    none\n')
+        f.write('  xBlndSoilEvap                random     0.0       1.0    none   none    none\n')
+        f.write('  xBlndBF                      random     0.0       1.0    none   none    none\n')
+        f.write('  xZtopsoil                    random     0.1       5.0    none   none    none\n')
+        f.write('  xZsubsoil                    random     0.1       5.0    none   none    none\n')
+        f.write('  xZphreatic                   random     0.1       5.0    none   none    none\n')
+        f.write('  xFC                          random    0.15       0.5    none   none    none\n')
+        f.write('  xWilt                        random    0.01      0.15    none   none    none\n')
+        f.write('  xBASEFLOW_COEFF              random     0.0       1.0    none   none    none\n')
+        f.write('  xBASEFLOW_N                  random     1.0      10.0    none   none    none\n')
+        f.write('  xHBV_BETA                    random     0.0       7.0    none   none    none\n')
+        f.write('  xMAX_BASEFLOW_RATE           random   0.001    1000.0    none   none    none\n')
+        f.write('  xPERC_COEFF                  random     0.0       1.0    none   none    none\n')
+        f.write('  xVIC_B_EXP                   random   0.001       3.0    none   none    none\n')
+        f.write('  xTOPMODEL_LAMBDA             random   0.001     100.0    none   none    none\n')
+        f.write('  xGAMMA_SCALE                 random     0.1      20.0    none   none    none\n')
+        f.write('  xGAMMA_SCAL2                 random     0.1      20.0    none   none    none\n')
+        f.write('  xGAMMA_SHAPE                 random     0.5       5.0    none   none    none\n')
+        f.write('  xGAMMA_SHAP2                 random     0.5       5.0    none   none    none\n')
+        f.write('  xHMETS_RUNOFF_COEFF          random     0.0       1.0    none   none    none\n')
         f.write('EndParams\n')
         f.write('\n')
         f.write('BeginTiedParams\n')

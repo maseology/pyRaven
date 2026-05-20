@@ -136,50 +136,58 @@ def write(root, nam, desc, builder, ver, wshd, hru, par):
 
             f.write('# global parameters:\n')
             f.write('# -----------------------\n')
-            if astpl:
+            if flg.preciprainmelt: 
+                f.write(':GlobalParameter RAINSNOW_TEMP     -100\n')            
+            elif astpl:
                 f.write(':GlobalParameter RAINSNOW_TEMP     {}\n'.format('xRAINSNOW_TEMP'))
                 if flg.preciponly: f.write(':GlobalParameter RAINSNOW_DELTA    {}\n'.format('xRAINSNOW_DELTA'))
                 f.write(':GlobalParameter SNOW_SWI          {}\n'.format('xSNOW_SWI'))
-                f.write(':GlobalParameter AVG_ANNUAL_RUNOFF {} # mm\n'.format(par.AVG_ANNUAL_RUNOFF))
             else:
                 f.write(':GlobalParameter RAINSNOW_TEMP     {}\n'.format(par.RAINSNOW_TEMP))
                 if flg.preciponly: f.write(':GlobalParameter RAINSNOW_DELTA    {}\n'.format(par.RAINSNOW_DELTA))
                 f.write(':GlobalParameter SNOW_SWI          {}\n'.format(par.SNOW_SWI))
-                f.write(':GlobalParameter AVG_ANNUAL_RUNOFF {}\n'.format(par.AVG_ANNUAL_RUNOFF))
-                # :GlobalParameter AIRSNOW_COEFF   0.75 #(1-x6)
-                # :GlobalParameter AVG_ANNUAL_SNOW 123.3 #x5 mm
-                # :GlobalParameter PRECIP_LAPSE    0.4
-                # :GlobalParameter ADIABATIC_LAPSE 6.5
-
+            f.write(':GlobalParameter AVG_ANNUAL_RUNOFF {}\n'.format(par.AVG_ANNUAL_RUNOFF))
+            # :GlobalParameter AIRSNOW_COEFF   0.75 #(1-x6)
+            # :GlobalParameter AVG_ANNUAL_SNOW 123.3 #x5 mm
+            # :GlobalParameter PRECIP_LAPSE    0.4
+            # :GlobalParameter ADIABATIC_LAPSE 6.5
 
             f.write('\n\n# class parameters:\n')
             f.write('# -----------------------\n\n')
 
             f.write('# snowmelt and lake PET parameters:\n')
             f.write(':LandUseParameterList\n')
-            f.write(' :Parameters           LAKE_PET_CORR  MELT_FACTOR  REFREEZE_FACTOR\n')
-            f.write(' :Units                         none       mm/d/K           mm/d/K\n') 
-            if astpl:
-                f.write('  [DEFAULT] {:>24} {:>12} {:>16}\n'.format('xLAKE_PET_CORR', 'xMELT_FACTOR', 'xREFREEZE_FACTOR'))
-                # for l in dlu: f.write('  {:25} _DEFAULT     _DEFAULT         _DEFAULT\n'.format(l))
+            if flg.preciprainmelt:
+                f.write(' :Parameters           LAKE_PET_CORR  MELT_FACTOR\n')
+                f.write(' :Units                         none       mm/d/K\n')                
+                if astpl:
+                    f.write('  [DEFAULT] {:>24} {:12}\n'.format('xLAKE_PET_CORR', par.MELT_FACTOR))
+                else:
+                    f.write('  [DEFAULT] {:24} {:12}\n'.format(par.LAKE_PET_CORR, par.MELT_FACTOR))
             else:
-                f.write('  [DEFAULT] {:24} {:12} {:16}\n'.format(par.LAKE_PET_CORR, par.MELT_FACTOR, par.REFREEZE_FACTOR))
-                # for l in dlu: f.write('  {:25} _DEFAULT     _DEFAULT         _DEFAULT\n'.format(l))
-                # # for l in dlu: 
-                # #     if l == 'Urban':
-                # #         f.write('  {:25} _DEFAULT          3.5              0.5\n'.format(l))
-                # #     else:
-                # #         f.write('  {:25} _DEFAULT     _DEFAULT         _DEFAULT\n'.format(l))
-                # # # f.write(' :Parameters             MELT_FACTOR  MIN_MELT_FACTOR  HBV_MELT_FOR_CORR  REFREEZE_FACTOR  HBV_MELT_ASP_CORR\n')
-                # # # f.write(' :Units                       mm/d/K          mm/d/K                none           mm/d/K               none\n') 
-                # # # f.write('  [DEFAULT]                   3.1339          1.3036                 1.0              1.0            0.65836\n')
-                # # # # f.write('  LU_ALL                _DEFAULT            _DEFAULT              0.6805            _DEFAULT            _DEFAULT\n')
-                # # # for l in dlu: 
-                # # #     if l == 'Urban':
-                # # #         f.write('  {:25}      3.5             1.3                 1.0              0.5           _DEFAULT\n'.format(l))
-                # # #     else:
-                # # #         f.write('  {:25} _DEFAULT        _DEFAULT            _DEFAULT         _DEFAULT           _DEFAULT\n'.format(l))
- 
+                f.write(' :Parameters           LAKE_PET_CORR  MELT_FACTOR  REFREEZE_FACTOR\n')
+                f.write(' :Units                         none       mm/d/K           mm/d/K\n')                
+                if astpl:
+                    f.write('  [DEFAULT] {:>24} {:>12} {:>16}\n'.format('xLAKE_PET_CORR', 'xMELT_FACTOR', 'xREFREEZE_FACTOR'))
+                    # for l in dlu: f.write('  {:25} _DEFAULT     _DEFAULT         _DEFAULT\n'.format(l))
+                else:
+                    f.write('  [DEFAULT] {:24} {:12} {:16}\n'.format(par.LAKE_PET_CORR, par.MELT_FACTOR, par.REFREEZE_FACTOR))
+                    # for l in dlu: f.write('  {:25} _DEFAULT     _DEFAULT         _DEFAULT\n'.format(l))
+                    # # for l in dlu: 
+                    # #     if l == 'Urban':
+                    # #         f.write('  {:25} _DEFAULT          3.5              0.5\n'.format(l))
+                    # #     else:
+                    # #         f.write('  {:25} _DEFAULT     _DEFAULT         _DEFAULT\n'.format(l))
+                    # # # f.write(' :Parameters             MELT_FACTOR  MIN_MELT_FACTOR  HBV_MELT_FOR_CORR  REFREEZE_FACTOR  HBV_MELT_ASP_CORR\n')
+                    # # # f.write(' :Units                       mm/d/K          mm/d/K                none           mm/d/K               none\n') 
+                    # # # f.write('  [DEFAULT]                   3.1339          1.3036                 1.0              1.0            0.65836\n')
+                    # # # # f.write('  LU_ALL                _DEFAULT            _DEFAULT              0.6805            _DEFAULT            _DEFAULT\n')
+                    # # # for l in dlu: 
+                    # # #     if l == 'Urban':
+                    # # #         f.write('  {:25}      3.5             1.3                 1.0              0.5           _DEFAULT\n'.format(l))
+                    # # #     else:
+                    # # #         f.write('  {:25} _DEFAULT        _DEFAULT            _DEFAULT         _DEFAULT           _DEFAULT\n'.format(l))
+    
             f.write(':EndLandUseParameterList\n\n')
 
 

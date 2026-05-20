@@ -20,7 +20,7 @@ def __semidistributedCollect(ins, xrlu, xrsg):
     nam = ins.nam
     now = datetime.now()
     builder = 'M. Marchildon ' + now.strftime("%Y-%m-%d %H:%M:%S")
-    ver = "3.8"
+    ver = "4.1"
 
 
     #################################
@@ -74,7 +74,10 @@ def __semidistributedCollect(ins, xrlu, xrsg):
         if 'lakehruthresh' in ins.params['options']:
             params.hru_min_lakef = float(ins.params['options']['lakehruthresh'])            
         if 'preciponly' in ins.params['options']: 
-            flg.preciponly=True
+            flg.preciponly=True # force input to precipitation only (=rainfall+snowfall) such that the model remains amenable to climate change import
+        if 'preciprainmelt' in ins.params['options']: 
+            flg.preciprainmelt=True # When import using OWRC API, this imports rainfall plus snowfall and avoids snowpack modelling in Raven
+            flg.preciponly=False
         if 'skiphruaggregation' in ins.params['options']: # Lumps all small HRUs (<hru_minf) into 1 mega HRU; otherwise aggregates small HRUs into generalized HRU sub-groups (will create greater number of HRUs) 
             aggregateHRUs = False
     if 'parameters' in ins.params: # get parameters
@@ -263,4 +266,3 @@ def HBV_OWRC(ins, xrlu, xrsg, sfx=''):
         
     endtime = str(timedelta(seconds=round(timer() - b0,0)))
     print('\ntotal elapsed time: ' + endtime)
-

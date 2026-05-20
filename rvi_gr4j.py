@@ -1,5 +1,6 @@
 
 import time
+from datetime import timedelta
 from pyRaven.flags import flg
 
 # build Primary Input file (.rvi)
@@ -64,9 +65,9 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
 
         f.write('\n# output options\n')
         f.write(':EvaluationMetrics KLING_GUPTA NASH_SUTCLIFFE PCT_BIAS\n')
-        # if flg.calibrationmode:
-        #     f.write(':EvaluationPeriod CALIBRATION {}-10-01 {}\n'.format(int(0.5*(dte.year-(dtb.year+1))+dtb.year+1), dte.strftime("%Y-%m-%d")))
-        #     # f.write(':EvaluationPeriod CALIBRATION {} {}\n'.format(dtb.strftime("%Y-%m-%d"), dte.strftime("%Y-%m-%d")))
+        if flg.calibrationmode:
+            # f.write(':EvaluationPeriod CALIBRATION {}-10-01 {}\n'.format(int(0.5*(dte.year-(dtb.year+1))+dtb.year+1), dte.strftime("%Y-%m-%d")))
+            f.write(':EvaluationPeriod CALIBRATION {} {}\n'.format((dtb + timedelta(days=365)).strftime("%Y-%m-%d"), dte.strftime("%Y-%m-%d")))
 
         cmnt = ''
         if flg.calibrationmode: cmnt='# '

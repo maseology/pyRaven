@@ -239,5 +239,5 @@ BeginDDSAlg
   PerturbationValue 0.20
   MaxIterations {}
   UseRandomParamValues
-  #UseInitialParamValues   # intializes DDS to parameter values IN the initial model input files
+  #UseInitialParamValues   # initializes DDS to parameter values IN the initial model input files
 EndDDSAlg""".format(nsmpl))
