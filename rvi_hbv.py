@@ -1,6 +1,7 @@
 
 import time
 from pyRaven.flags import flg
+from datetime import timedelta
 
 # build Primary Input file (.rvi)
 def write(root, nam, builder, ver, dtb, dte, res, intvl):
@@ -94,25 +95,34 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write(' :SoilEvaporation          SOILEVAP_HBV         TOPSOIL          ATMOSPHERE\n')
         f.write(' :CapillaryRise            CRISE_HBV            FAST_RESERVOIR   TOPSOIL\n')
         # f.write(' :SoilEvaporation          SOILEVAP_HBV         FAST_RESERVOIR   ATMOSPHERE\n')
+        
+        f.write(' # Recharge\n')
         f.write(' :Percolation              PERC_CONSTANT        FAST_RESERVOIR   SLOW_RESERVOIR\n')
         f.write('  :-->Conditional LAND_CLASS IS_NOT Urban\n')
         f.write(' :Flush                    RAVEN_DEFAULT        FAST_RESERVOIR   SLOW_RESERVOIR    0.05\n')
         f.write('  :-->Conditional LAND_CLASS IS Urban\n')
-        # f.write(' :Baseflow                 BASE_THRESH_POWER    FAST_RESERVOIR   SURFACE_WATER\n') # HBV-light
-        f.write(' :Baseflow                 BASE_THRESH_STOR     FAST_RESERVOIR   SURFACE_WATER\n') # alternative: used to enhance recharge
+
+        f.write(' # Fast and slow runoff\n')
+        f.write(' :Baseflow                 BASE_LINEAR          FAST_RESERVOIR   SURFACE_WATER\n') # comment out to enhance recharge (~20mm/yr on, ~)
+        f.write('  :-->Conditional LAND_CLASS IS_NOT Urban\n')
+        f.write(' :Baseflow                 BASE_THRESH_STOR     FAST_RESERVOIR   SURFACE_WATER\n') 
         f.write('  :-->Conditional LAND_CLASS IS_NOT Urban\n')
         f.write(' :Baseflow                 BASE_POWER_LAW       FAST_RESERVOIR   SURFACE_WATER\n')
         f.write('  :-->Conditional LAND_CLASS IS Urban\n')
+
         f.write(' :Baseflow                 BASE_LINEAR          SLOW_RESERVOIR   SURFACE_WATER\n')
+        
         # f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         FAST_RESERVOIR    1.0\n')
         # f.write(' :LateralEquilibrate       RAVEN_DEFAULT        LandHRUs         SLOW_RESERVOIR    1.0\n')
+        
         f.write(':EndHydrologicProcesses\n')
 
 
         f.write('\n# output options\n')
         f.write(':EvaluationMetrics KLING_GUPTA NASH_SUTCLIFFE PCT_BIAS\n')
         if flg.calibrationmode:
-            f.write(':EvaluationPeriod CALIBRATION {}-10-01 {}\n'.format(int(0.5*(dte.year-(dtb.year+1))+dtb.year+1), dte.strftime("%Y-%m-%d")))
+            # f.write(':EvaluationPeriod CALIBRATION {}-10-01 {}\n'.format(int(0.5*(dte.year-(dtb.year+1))+dtb.year+1), dte.strftime("%Y-%m-%d")))
+            f.write(':EvaluationPeriod CALIBRATION {} {}\n'.format((dtb + timedelta(days=365)).strftime("%Y-%m-%d"), dte.strftime("%Y-%m-%d")))
 
         cmnt = ''
         if flg.calibrationmode: cmnt='# '
@@ -122,19 +132,19 @@ def write(root, nam, builder, ver, dtb, dte, res, intvl):
         f.write('\n{}# output waterbudgets\n'.format(cmnt))
         # f.write('\n{}:WriteNetCDFFormat\n'.format(cmnt))
 
-        f.write('{}:CustomOutput MONTHLY CUMULSUM  PRECIP                                    BY_HRU\n'.format(cmnt))   # monthly precipitation by hru
-        f.write('{}:CustomOutput MONTHLY CUMULSUM  AET                                       BY_HRU\n'.format(cmnt))   # monthly evapotranspiration by hru
-        f.write('{}:CustomOutput MONTHLY CUMULSUM  RUNOFF                                    BY_HRU\n'.format(cmnt))   # monthly runoff by hru
+        f.write('{}:CustomOutput MONTHLY CUMULSUM  PRECIP                                    BY_HRU   # monthly precipitation by hru\n'.format(cmnt))   # monthly precipitation by hru
+        f.write('{}:CustomOutput MONTHLY CUMULSUM  AET                                       BY_HRU   # monthly evapotranspiration by hru\n'.format(cmnt))   # monthly evapotranspiration by hru
+        f.write('{}:CustomOutput MONTHLY CUMULSUM  RUNOFF                                    BY_HRU   # monthly runoff by hru\n'.format(cmnt))   # monthly runoff by hru
 
-        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:PONDED_WATER.And.TOPSOIL          BY_HRU\n'.format(cmnt))   # infiltration
-        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:FAST_RESERVOIR.And.SLOW_RESERVOIR BY_HRU\n'.format(cmnt))   # recharge
-        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:SLOW_RESERVOIR.And.SURFACE_WATER  BY_HRU\n'.format(cmnt))   # baseflow
+        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:PONDED_WATER.And.TOPSOIL          BY_HRU   # infiltration\n'.format(cmnt))   # infiltration
+        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:FAST_RESERVOIR.And.SLOW_RESERVOIR BY_HRU   # recharge\n'.format(cmnt))   # recharge
+        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:SLOW_RESERVOIR.And.SURFACE_WATER  BY_HRU   # baseflow\n'.format(cmnt))   # baseflow
 
-        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:PONDED_WATER.And.SURFACE_WATER    BY_HRU\n'.format(cmnt))   # impervious runoff
+        f.write('{}:CustomOutput MONTHLY AVERAGE   Between:PONDED_WATER.And.SURFACE_WATER    BY_HRU   # impervious runoff\n'.format(cmnt))   # impervious runoff
 
-        f.write('{}:CustomOutput MONTHLY AVERAGE   TOPSOIL                                   BY_HRU\n'.format(cmnt))   # vadose zone storage
-        f.write('{}:CustomOutput MONTHLY AVERAGE   FAST_RESERVOIR                            BY_HRU\n'.format(cmnt))   # fast zone storage
-        f.write('{}:CustomOutput MONTHLY AVERAGE   SLOW_RESERVOIR                            BY_HRU\n'.format(cmnt))   # slow zone storage
+        f.write('{}:CustomOutput MONTHLY AVERAGE   TOPSOIL                                   BY_HRU   # vadose zone storage\n'.format(cmnt))   # vadose zone storage
+        f.write('{}:CustomOutput MONTHLY AVERAGE   FAST_RESERVOIR                            BY_HRU   # fast zone storage\n'.format(cmnt))   # fast zone storage
+        f.write('{}:CustomOutput MONTHLY AVERAGE   SLOW_RESERVOIR                            BY_HRU   # slow zone storage\n'.format(cmnt))   # slow zone storage
 
 
         if not flg.calibrationmode and res is not None:

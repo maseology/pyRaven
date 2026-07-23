@@ -24,8 +24,8 @@ class HRU:
         cc = 0
         for sid,cids in wshd.xr.items():
             dt, xt, yt, zt, gt, axt, ayt, gnt = dict(), dict(), dict(), dict(), dict(), dict(), dict(), dict()
-            n, nlak, nwl = len(cids), 0, 0
-            zon = wshd.zon[sid]
+            n, nlak, nwl, zon = len(cids), 0, 0, ""
+            if len(wshd.zon)>0: wshd.zon[sid]
             for c in cids:                
                 # HARD-CODED DEFAULTS
                 ll = defaultLU
@@ -121,7 +121,8 @@ class HRU:
                             for c in cids: 
                                 if self.cells[c]==t: cidm.append(c)
                             if t[0][0]=='Urban':
-                                aggregate(t,(("Urban", "Bare"),('LowMedium',zon)),v,cidm)
+                                # aggregate(t,(("Urban", "Bare"),('LowMedium',zon)),v,cidm)
+                                aggregate(t,(("Urban", "Bare"),('Urban',zon)),v,cidm)
                             else:
                                 match t[1]:
                                     case 'WetlandSediments': # WetlandSediments/organics

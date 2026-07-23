@@ -1,7 +1,8 @@
 
-import os
+import os, pickle
 import pandas as pd
 import numpy as np
+from pathlib import Path
 from datetime import datetime, timedelta
 from timeit import default_timer as timer
 from pymmio import files as mmio, ascii
@@ -150,33 +151,50 @@ def __semidistributedCollect(ins, xrlu, xrsg):
     sel = None
     if 'cid0' in ins.params: sel = int(ins.params['cid0'])
     if 'selwshd' in ins.params: sel = set(ascii.readInts(relpath(ins.params['selwshd'])))
-    if 'swsids' in ins.params: sel = set(ins.params['swsids'])       
-    lu = {k: xrlu.xr(v) for k, v in lu.items()}
-    sg = {k: xrsg.xr(v) for k, v in sg.items()}
-    wshd = Watershed(relpath(ins.params['wshd']), dem, sel, epsg)
-    if len(obsFP)>0 and not os.path.isdir(obsFP):
-        df = pd.read_csv(obsFP)
-        if not "Date" in df.columns and "SubId" in df.columns: 
-            # special case: when observation file is not a hydrograph, rather an index of SubIds and listed .rvt files
-            # created using E:\Sync\@dev\go\src\test\rdrr-to-raven-input\main.go
-            gagdict = dict(zip(df.SubId,df.name))
-            for k,v in gagdict.items():
-                if k in wshd.gag: 
-                    wshd.gag[k]=v
-            obsFP=mmio.removeExt(obsFP)
-    if flg.calibrationmode:
-        norig = len(wshd.xr)
-        sel = set()
-        for k,v in wshd.gag.items():
-            if len(v)==0: continue
-            sel.update(wshd.climb(k))
-        wshd = wshd.subset(list(sel))
-        print(' for calibration mode, model reduced from {} to {} subbasins'.format(norig,len(wshd.xr)))
-    # else:
-    #     mmio.mkDir(root0+nam+'-rasters')
-    #     gd.saveBinaryInt(root0+nam+'-rasters/'+nam+'-ilu.bil',lu)
-    #     gd.saveBinaryInt(root0+nam+'-rasters/'+nam+'-isg.bil',sg)
-    hrus = hru.HRU(wshd,lu,sg,params.hru_minf,params.hru_min_lakef,dem,xrlu.default(),xrsg.default(),epsg,aggregateHRUs)
+    if 'swsids' in ins.params: sel = set(ins.params['swsids']) 
+    # flg.cache = True ##################################################################################################################################HC
+    if flg.cache and os.path.exists(root+nam+'-wshd.pkl') and os.path.exists(root+nam+'-hru.pkl'):
+        print(' loading {}'.format(root+nam+'-wshd.pkl'))
+        with open(root+nam+'-wshd.pkl', "rb") as f: wshd = pickle.load(f)
+        with open(root+nam+'-hru.pkl', "rb") as f: hrus = pickle.load(f)        
+    else:
+        lu = {k: xrlu.xr(v) for k, v in lu.items()}
+        sg = {k: xrsg.xr(v) for k, v in sg.items()}
+        wshd = Watershed(relpath(ins.params['wshd']), dem, sel, epsg)
+        if len(obsFP)>0 and not os.path.isdir(obsFP):
+            if obsFP[-4:]=='.obs':
+                with open(obsFP, "r") as f:
+                    for line in f:
+                        k, v = line.strip().split(" ", 1) # created using goORMGP\OWRC23-RDRR\prepObs\01getCsv.py
+                        wshd.gag[int(k)] = v
+                obsFP=str(Path(obsFP).parent)+'\\streamflow'
+            else:
+                df = pd.read_csv(obsFP)
+                if not "Date" in df.columns and "SubId" in df.columns: 
+                    # special case: when observation file is not a hydrograph, rather an index of SubIds and listed .rvt files
+                    # created using E:\Sync\@dev\go\src\test\rdrr-to-raven-input\main.go
+                    gagdict = dict(zip(df.SubId,df.name))
+                    for k,v in gagdict.items():
+                        if k in wshd.gag: wshd.gag[k]=v
+                    obsFP=mmio.removeExt(obsFP)
+        if flg.calibrationmode:
+            norig = len(wshd.xr)
+            sel = set()
+            for k,v in wshd.gag.items():
+                if not k in wshd.xr: continue
+                if len(v)==0: continue
+                sel.update(wshd.climb(k))
+            wshd = wshd.subset(list(sel))
+            print(' for calibration mode, model reduced from {} to {} subbasins'.format(norig,len(wshd.xr)))
+        # else:
+        #     mmio.mkDir(root0+nam+'-rasters')
+        #     gd.saveBinaryInt(root0+nam+'-rasters/'+nam+'-ilu.bil',lu)
+        #     gd.saveBinaryInt(root0+nam+'-rasters/'+nam+'-isg.bil',sg)
+        hrus = hru.HRU(wshd,lu,sg,params.hru_minf,params.hru_min_lakef,dem,xrlu.default(),xrsg.default(),epsg,aggregateHRUs)
+        wshd.writeSWSidBil(root+nam+'-wshdid.bil', gd) # print index files
+        hrus.writeHRUidBil(root,nam, gd, wshd) # outputs an HRU id cross-referencing raster
+        with open(root+nam+'-wshd.pkl', "wb") as f: pickle.dump(wshd, f, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(root+nam+'-hru.pkl', "wb") as f: pickle.dump(hrus, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
     # compile subbasin land use stats
@@ -195,10 +213,6 @@ def __semidistributedCollect(ins, xrlu, xrsg):
 
     # make directories   
     mmio.mkDir(root)
-
-    # print misc files
-    # if flg.calibrationmode: 
-    hrus.writeHRUidBil(root,nam, gd, wshd) # outputs an HRU id cross-referencing raster
 
     return root0, root, nam, builder, ver, wshd, hrus, res, params, obsFP, ts, dtb, dte
 
@@ -262,7 +276,7 @@ def HBV_OWRC(ins, xrlu, xrsg, sfx=''):
     # Copy Ostrich files and templates
     if flg.calibrationmode: 
         print('\n writing Ostrich templates..')
-        ostrich_HBV.writeDDS(root0 + nam + ins.sfx + "_CALIB\\", nam, wshd, hrus, res)
+        ostrich_HBV.writeDDS(root0 + nam + ins.sfx + "_CALIB\\", nam, ver, wshd, hrus, res, 5000)
         
     endtime = str(timedelta(seconds=round(timer() - b0,0)))
     print('\ntotal elapsed time: ' + endtime)

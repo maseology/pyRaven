@@ -2,14 +2,17 @@
 import shutil
 import numpy as np
 from pyRaven.flags import flg
+from pyRaven.rvp_defaults import sgxr
 from pymmio import files as mmio
 
-def writeDDS(root, nam, wshd, hru, res, nsmpl=10):
+def writeDDS(root, nam, ver, wshd, hru, res, nsmpl=10):
     
-    rfn = 'Raven3.8.exe'
+    rfn = 'Raven' + ver + '.exe'
     ofn = 'Ostrich_v20171219_Windows.exe'
 
     shutil.copy("E:/Sync/@dev/Raven-bin/"+ofn,root+ofn)
+
+    with open(root + "OstQuit.txt.x","w") as f: f.write('')
 
     haslakes=False
     for ihru in hru.hrus.keys():
@@ -50,13 +53,32 @@ PAUSE>NUL""".format(ofn))
         if haslakes: f.write('copy model\\{0}-lakes.rvh  best\\{0}-lakes.rvh\n'.format(nam))
         f.write('copy model\\output\\{0}_Diagnostics.csv best\\{0}_Diagnostics.csv\n'.format(nam))
         f.write('REM copy model\\output\\{0}_Hydrographs.csv best\\{0}_Hydrographs.csv'.format(nam))
-        
+
+
+    '''
+    3.5. Aborting an Ostrich Run
+    An OSTRICH run can be aborted by creating a file named OstQuit.txt and placing it in
+    the working directory where the corresponding ostIn.txt file is located. OSTRICH will detect the
+    presence of the OstQuit.txt file during the next iteration of search and will exit gracefully.
+
+    3.6. Restarting an Ostrich Run
+    Some OSTRICH search algorithms can be restarted from previous runs of a potentially
+    different algorithm. These algorithms are indicated by the shaded entries in the “Warm Start?”
+    column of Table 1. Users should include a line containing “OstrichWarmStart yes” in the
+    ostIn.txt input file to activate an OSTRICH restart. OSTRICH will then read in the contents of
+    previous output files (see Section 4) to configure the restart state of the selected search
+    algorithm. 
+    '''
+
     with open(root+'ostIn.txt','w') as f:
-        f.write("""ProgramType         DDS
+        f.write("""
+ProgramType         DDS
 ObjectiveFunction   GCOP
 
 ModelExecutable  ost_raven.bat
 PreserveBestModel ost_savebest.bat
+
+OstrichWarmStart no               
 
 BeginExtraDirs
   model
@@ -75,18 +97,19 @@ EndExtraDirs""")
         f.write('  #parameter                    init.     low      high   tx_in tx_ost  tx_out\n')
         f.write('  #\n')
         f.write('  # Global\n')
-        f.write('  xTop                         random     0.1       0.5    none   none    none\n')  # FC
-        # f.write('  xFast                        random     0.1       2.0    none   none    none\n')
-        # f.write('  xSlow                        random     0.1       2.0    none   none    none\n')
+        f.write('  xUrbTop                      random     0.0       5.0    none   none    none\n')  # urban depression
+        f.write('  xTop                         random     0.0       5.0    none   none    none\n')  # FC
         f.write('  xAgImprv                     random     0.0       1.0    none   none    none\n')
-        f.write('  xRAINSNOW_TEMP               random    -2.0       4.0    none   none    none\n')
-        if flg.preciponly: f.write('  xRAINSNOW_DELTA              random     1.0      20.0    none   none    none\n')
-        f.write('  xSNOW_SWI                    random    0.01      0.12    none   none    none\n')
-        # f.write('  xLogMAX_PERC_RATE_MULT       random      -2         2    none   none    none  # global multiplier (tied)\n')
+        if not flg.preciprainmelt:
+            f.write('  xRAINSNOW_TEMP               random    -2.0       4.0    none   none    none\n')
+            if flg.preciponly: f.write('  xRAINSNOW_DELTA              random     1.0      20.0    none   none    none\n')
+            f.write('  xSNOW_SWI                    random    0.01      0.12    none   none    none\n')
+        f.write('  xLogMAX_PERC_RATE_MULT       random      -2         2    none   none    none  # global multiplier (tied)\n')        
         f.write('  #\n')
         f.write('  # Landuse\n')
-        f.write('  xMELT_FACTOR                 random     0.0      18.0    none   none    none\n')
-        f.write('  xREFREEZE_FACTOR             random     0.0      10.0    none   none    none\n')
+        if not flg.preciprainmelt:
+            f.write('  xMELT_FACTOR                 random     0.0      18.0    none   none    none\n')
+            f.write('  xREFREEZE_FACTOR             random     0.0      10.0    none   none    none\n')
         f.write('  xLAKE_PET_CORR               random     0.5       1.2    none   none    none\n')
         f.write('  xPET_CORRECTION              random     0.5       1.2    none   none    none\n')
         f.write('  xHBV_BETA                    random     0.0      10.0    none   none    none\n')
@@ -122,9 +145,10 @@ EndExtraDirs""")
         f.write('  #\n')
         f.write('  # Interception\n')
         f.write('  xRAIN_ICEPT_FACT             random     0.0       1.0    none   none    none\n')
-        f.write('  xSNOW_ICEPT_FACT             random     0.0       1.0    none   none    none\n')
         f.write('  xMAX_CAPACITY                random     0.0       5.0    none   none    none\n')
-        f.write('  xMAX_SNOW_CAPACITY           random     0.0       5.0    none   none    none\n')
+        if not flg.preciprainmelt:            
+            f.write('  xSNOW_ICEPT_FACT             random     0.0       1.0    none   none    none\n')
+            f.write('  xMAX_SNOW_CAPACITY           random     0.0       5.0    none   none    none\n')
         f.write('  #\n')
 
         f.write('  # Baseflow\n')
@@ -145,7 +169,7 @@ EndExtraDirs""")
                 stpl = st
                 if stpl[:3]=="Low" and len(stpl)>3: stpl=stpl.replace("Low","L")
                 if stpl[:6]=="Medium" and len(stpl)>6: stpl=stpl.replace("Medium","M")            
-                f.write('  xk{:<20}       random     0.0       1.0    none   none    none\n'.format(stpl))
+                f.write('  xbf{:<20}       random     0.0       1.0    none   none    none\n'.format(stpl))
             if len(wshd.zon)>0:
                 grps = [int(i) for i in list(set(wshd.zon.values()))]
                 grps.sort()
@@ -168,14 +192,23 @@ EndExtraDirs""")
             else: # len(wshd.lak)>0:
                 for t,lusg in hru.hrus.items():
                     if lusg=='lake':
-                        f.write('  xCW{:<20}        10.0     0.1      50.0    none   none    none\n'.format(t))
+                        # f.write('  xCW{:<20}        10.0     0.1      50.0    none   none    none\n'.format(t))
+                        f.write('  xCW{:<20}        10.0     0.1      50.0    none   none    none\n'.format(wshd.nam[t].lower().replace('reservoir','').replace('-','')))
 
 
         f.write('EndParams\n')
         f.write('\n')
         f.write('BeginTiedParams\n')
         f.write('  # logarithm, base 10 (pl = 10^p)\n')
-        # f.write('  xMAX_PERC_RATE_MULT   1   xLogMAX_PERC_RATE_MULT  exp     10.0  1.0  1.0  0.0  free\n')
+        # f.write('  xMAX_PERC_RATE_MULT   1   xLogMAX_PERC_RATE_MULT  exp     10.0  1.0  1.0  0.0  free\n')        
+        sxgrDay = {x: y/365.24 for x, y in sgxr.items()} # convert from mm/yr to mm/d
+        for st in set([v for v in dsg]):
+            if st=='LAKE': continue
+            if st=='Urban': continue
+            stpl = st
+            if stpl[:3]=="Low" and len(stpl)>3: stpl=stpl.replace("Low","L")
+            if stpl[:6]=="Medium" and len(stpl)>6: stpl=stpl.replace("Medium","M")            
+            f.write('  xk{:<20}1   xLogMAX_PERC_RATE_MULT  exp     10.0 {:10.4f}  1.0  0.0  free\n'.format(stpl,sxgrDay[st]))
         if len(wshd.zon)>0:
             grps = [int(i) for i in list(set(wshd.zon.values()))]
             grps.sort()
@@ -199,29 +232,36 @@ EndExtraDirs""")
             glist.append(g)
 
         for i, g in enumerate(glist):
-            f.write('  KG{:<14}  {:48};  OST_NULL      {:>3}       3       \',\'\n'.format(g,dfp,i+1))
+            # f.write('  KG{:<14}  {:48};  OST_NULL      {:>3}       3       \',\'\n'.format(g,dfp,i+1))
+            f.write('  NS{:<14}  {:48};  OST_NULL      {:>3}       4       \',\'\n'.format(g,dfp,i+1))
         f.write('EndResponseVars\n')
 
         f.write('\nBeginTiedRespVars\n')
-        if len(glist)<10:
-            f.write('  NegKG  {}  KG{}  wsum  {}\n'.format(len(glist)," KG".join(glist)," ".join(["{:.3f}".format(-1/len(glist))]*len(glist))))
-            # f.write('  NegKG  {}  KG{}  wsum  {}\n'.format(len(glist)," KG".join(glist)," ".join(["-1.0"]*len(glist))))
+        batch_size = 10
+        if len(glist)<batch_size:
+            # f.write('  NegKG  {}  KG{}  wsum  {}\n'.format(len(glist)," KG".join(glist)," ".join(["{:.3f}".format(-1/len(glist))]*len(glist))))
+            # # f.write('  NegKG  {}  KG{}  wsum  {}\n'.format(len(glist)," KG".join(glist)," ".join(["-1.0"]*len(glist))))
+            f.write('  NegNS  {}  NS{}  wsum  {}\n'.format(len(glist)," NS".join(glist)," ".join(["{:.3f}".format(-1/len(glist))]*len(glist))))
         else:
-            nln = int(np.floor(len(glist)/10))
+            nln = int(np.ceil(len(glist)/batch_size))
             for i in range(nln-1):
-                f.write('  NegKG_{:<2}  {}  KG{}  wsum  {}\n'.format(i+1,10," KG".join(glist[i*10:(i+1)*10])," ".join(["-0.1"]*10)))
-            rem = len(glist)-(nln-1)*10
-            f.write('  NegKG_{:<2}  {}  KG{}  wsum  {}\n'.format(nln,10," KG".join(glist[-rem:])," ".join(["{:.3f}".format(-1/rem)]*rem)))
-            f.write('  NegKG_all {}  NegKG_{}  wsum  {}\n'.format(nln," NegKG_".join([str(i+1) for i in np.arange(nln)])," ".join(["{:.3f}".format(-1/nln)]*nln)))
+                # f.write('  NegKG_{:<2}  {}  KG{}  wsum  {}\n'.format(i+1,batch_size," KG".join(glist[i*batch_size:(i+1)*batch_size])," ".join(["-0.1"]*batch_size)))
+                f.write('  NegNS_{:<2} {:<2}  NS{}  wsum  {}\n'.format(i+1,batch_size," NS".join(glist[i*batch_size:(i+1)*batch_size])," ".join(["-1"]*batch_size)))
+            rem = len(glist)-(nln-1)*batch_size
+            # f.write('  NegKG_{:<2}  {}  KG{}  wsum  {}\n'.format(nln,rem," KG".join(glist[-rem:])," ".join(["{:.3f}".format(-1/rem)]*rem)))
+            # f.write('  NegKG_all {}  NegKG_{}  wsum  {}\n'.format(nln," NegKG_".join([str(i+1) for i in np.arange(nln)])," ".join(["{:.3f}".format(1/nln)]*nln)))
+            f.write('  NegNS_{:<2}  {:<2}  NS{}  wsum  {}\n'.format(nln,rem," NS".join(glist[-rem:])," ".join(["-1"]*rem)))
+            f.write('  NegNS_all {:<2}  NegNS_{}  wsum  {}\n'.format(nln," NegNS_".join([str(i+1) for i in np.arange(nln)])," ".join(["1"]*nln)))
         f.write('EndTiedRespVars\n')
 
 
         f.write('\nBeginGCOP\n')
         if len(glist)<10:
-            f.write('  #CostFunction NegNS\n')
-            f.write('  CostFunction NegKG\n')
+            # f.write('  CostFunction NegKG\n')
+            f.write('  CostFunction NegNS\n')            
         else:
-            f.write('  CostFunction NegKG_all\n')
+            # f.write('  CostFunction NegKG_all\n')
+            f.write('  CostFunction NegNS_all\n')
         f.write('  PenaltyFunction APM\n')
         f.write('EndGCOP\n')
 

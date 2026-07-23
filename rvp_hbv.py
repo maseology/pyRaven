@@ -78,8 +78,10 @@ def write(root, nam, desc, builder, ver, wshd, hru, par):
             # f.write('  FAST      {:10}{:10}{:10}{:10}\n'.format(.8,.2,0.0,0.0))
             # f.write('  SLOW      {:10}{:10}{:10}{:10}\n'.format(.8,.2,0.0,0.0))
             f.write('  ' + 'TOP\n')
+            f.write('  ' + 'Urban\n')
             for s in dsg: 
                 if s=='LAKE':continue
+                if s=='Urban':continue
                 if flg.gwzonemode:
                     # f.write('  ' + s[0]+str(s[1]) + 'TOP\n')
                     f.write('  ' + s[0]+str(s[1]) + '\n') #'FAST\n')
@@ -97,34 +99,44 @@ def write(root, nam, desc, builder, ver, wshd, hru, par):
             f.write(':EndSoilClasses\n\n')
 
             f.write('# soil profile definition (horizon depths in metres)\n')
-            f.write('#  Note: in HBV only the top layer requires a capacity, both the fast and slow reservoirs have a semi-infinite domain)\n')        
+            f.write('#  Note: in HBV only the top layer requires a capacity, both the fast and slow reservoirs have a semi-infinite domain\n')        
             f.write(':SoilProfiles\n')
             # f.write('  DEFAULT_P,    3,    TOP, 0.075, FAST, 0.1,  SLOW, 5.0\n')
             if len(wshd.zon)>0:
                 grps = [int(i) for i in list(set(wshd.zon.values()))]
                 grps.sort()
-                for g in grps:
+                template = '  {0:25}{1:5}   TOP{2:>10}{5:>25}{3:>10}        SLOW{6:03d}{4:>10}\n'
+                for g in grps:                    
+                    if astpl:
+                        f.write(template.format('Urban'+'{:03d}'.format(g),3,'xUrbTop',1.,1.,'Urban',g))
+                    else:
+                        f.write(template.format('Urban'+'{:03d}'.format(g),3,0.075,1.,1.,'Urban',g))                      
                     for s in dsg:
                         if s=='LAKE':continue
+                        if s=='Urban':continue
                         ss = s
                         if flg.gwzonemode: ss=s[0]+str(s[1])
                         if astpl:
-                            # f.write('  {0:25}{1:5}{0:>26}TOP{2:>10}{0:>25}FAST{3:>10}{0:>25}SLOW{4:>10}\n'.format(ss,3,'xTop','xFast','xSlow'))
-                            f.write('  {0:25}{1:5}   TOP{2:>10}{5:>25}{3:>10}        SLOW{6:03d}{4:>10}\n'.format(ss+'{:03d}'.format(g),3,'xTop',1.,1.,ss,g))
+                            f.write(template.format(ss+'{:03d}'.format(g),3,'xTop',1.,1.,ss,g))
                         else:
-                            # f.write('  {0:25}{1:5}{0:>26}TOP{2:>10}{0:>25}FAST{3:>10}{0:>25}SLOW{4:>10}\n'.format(ss,3,0.075,0.1,5.))
-                            f.write('  {0:25}{1:5}   TOP{2:>10}{5:>25}{3:>10}        SLOW{6:03d}{4:>10}\n'.format(ss+'{:03d}'.format(g),3,0.075,1.,1.,ss,g))                    
+                            f.write(template.format(ss+'{:03d}'.format(g),3,0.075,1.,1.,ss,g))                    
             else:
+                template = '  {0:25}{1:5}   TOP{2:>10}{0:>25} {3:>10}SLOW{4:>10}\n'
+                if astpl:
+                    f.write(template.format('Urban',3,'xUrbTop',1.,1.))
+                else:
+                    f.write(template.format('Urban',3,0.075,1.,1.))                
                 for s in dsg: 
                     if s=='LAKE':continue
+                    if s=='Urban':continue
                     ss = s
                     if flg.gwzonemode: ss=s[0]+str(s[1])
                     if astpl:
-                        # f.write('  {0:25}{1:5}{0:>26}TOP{2:>10}{0:>25}FAST{3:>10}{0:>25}SLOW{4:>10}\n'.format(ss,3,'xTop','xFast','xSlow'))
-                        f.write('  {0:25}{1:5}   TOP{2:>10}{0:>25}FAST{3:>10}{0:>25}SLOW{4:>10}\n'.format(ss,3,'xTop',1.,1.))
+                        # f.write('  {0:25}{1:5}{0:>26}TOP{2:>10}{0:>25} {3:>10}SLOW{4:>10}\n'.format(ss,3,'xTop','xFast','xSlow'))
+                        f.write(template.format(ss,3,'xTop',1.,1.))
                     else:
-                        # f.write('  {0:25}{1:5}{0:>26}TOP{2:>10}{0:>25}FAST{3:>10}{0:>25}SLOW{4:>10}\n'.format(ss,3,0.075,0.1,5.0))
-                        f.write('  {0:25}{1:5}   TOP{2:>10}{0:>25}FAST{3:>10}{0:>25}SLOW{4:>10}\n'.format(ss,3,0.075,1.,1.))
+                        # f.write('  {0:25}{1:5}{0:>26}TOP{2:>10}{0:>25} {3:>10}SLOW{4:>10}\n'.format(ss,3,0.075,0.1,5.0))
+                        f.write(template.format(ss,3,0.075,1.,1.))
             f.write('  LAKE                         0\n')
             f.write(':EndSoilProfiles\n\n')
 
@@ -137,7 +149,7 @@ def write(root, nam, desc, builder, ver, wshd, hru, par):
             f.write('# global parameters:\n')
             f.write('# -----------------------\n')
             if flg.preciprainmelt: 
-                f.write(':GlobalParameter RAINSNOW_TEMP     -100\n')            
+                f.write(':GlobalParameter RAINSNOW_TEMP    -100  # input precipitation is in the form of rainfall + snowmelt\n')            
             elif astpl:
                 f.write(':GlobalParameter RAINSNOW_TEMP     {}\n'.format('xRAINSNOW_TEMP'))
                 if flg.preciponly: f.write(':GlobalParameter RAINSNOW_DELTA    {}\n'.format('xRAINSNOW_DELTA'))
@@ -199,7 +211,10 @@ def write(root, nam, desc, builder, ver, wshd, hru, par):
             f.write(' :Parameters          RAIN_ICEPT_FACT  SNOW_ICEPT_FACT  MAX_CAPACITY  MAX_SNOW_CAPACITY\n') # if using PRECIP_ICEPT_LAI
             f.write(' :Units                          none             none          none               none\n')
             if astpl:
-                f.write('  [DEFAULT] {:>25}{:>17}{:>14}{:>19}\n'.format('xRAIN_ICEPT_FACT', 'xSNOW_ICEPT_FACT','xMAX_CAPACITY', 'xMAX_SNOW_CAPACITY'))   
+                if flg.preciprainmelt:
+                    f.write('  [DEFAULT] {:>25}{:>17}{:>14}{:>19}\n'.format('xRAIN_ICEPT_FACT', par.SNOW_ICEPT_FACT,'xMAX_CAPACITY', par.MAX_SNOW_CAPACITY))   
+                else:
+                    f.write('  [DEFAULT] {:>25}{:>17}{:>14}{:>19}\n'.format('xRAIN_ICEPT_FACT', 'xSNOW_ICEPT_FACT','xMAX_CAPACITY', 'xMAX_SNOW_CAPACITY'))   
             else:
                 f.write('  [DEFAULT] {:25}{:17}{:14}{:19}\n'.format(par.RAIN_ICEPT_FACT, par.SNOW_ICEPT_FACT,par.MAX_CAPACITY, par.MAX_SNOW_CAPACITY))   
             # for v in dveg: 
@@ -249,55 +264,61 @@ def write(root, nam, desc, builder, ver, wshd, hru, par):
             #    LUZ: STORAGE_THRESHOLD
             #  K1/K2: BASEFLOW_COEFF
             #   xtra: BASE_THRESH_N   MAX_BASEFLOW_RATE   BASEFLOW_THRESH   
-            f.write(' :Parameters                PET_CORRECTION  POROSITY  HBV_BETA  FIELD_CAPACITY  SAT_WILT  MAX_CAP_RISE_RATE  MAX_PERC_RATE  STORAGE_THRESHOLD     BASEFLOW_COEFF2      BASEFLOW_COEFF  BASEFLOW_N\n')
-            f.write(' :Units                               none      none      none            none      none               mm/d           mm/d                 mm                 1/d                 1/d        none\n')
+            f.write(' :Parameters                PET_CORRECTION  POROSITY  HBV_BETA  FIELD_CAPACITY  SAT_WILT  MAX_CAP_RISE_RATE      MAX_PERC_RATE  STORAGE_THRESHOLD     BASEFLOW_COEFF2      BASEFLOW_COEFF  BASEFLOW_N\n')
+            f.write(' :Units                               none      none      none            none      none               mm/d               mm/d                 mm                 1/d                 1/d        none\n')
             if flg.gwzonemode:
                 print(" \n\n\n ******  WARNING TODO: rvp_hbv.py (flg.gwzonemode)  ****** \n\n\n")
                 pass
             else:
                 if astpl:
-                    f.write('  [DEFAULT]               {:>16}       1.0{:>10}{:>16}       0.0{:>19}            0.0{:>19}{:20.3f}{:20.3f}{:>12}\n'.format('xPET_CORRECTION','xHBV_BETA','xFIELD_CAPACITY','xMAX_CAP_RISE_RATE','xSTORAGE_THRESHOLD',par.INTERFLOW_COEFF,par.INTERFLOW_COEFF,'xBASEFLOW_N'))
-                    f.write('  TOP                             _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT           _DEFAULT            _DEFAULT            _DEFAULT    _DEFAULT\n') 
+                    f.write('  [DEFAULT]               {:>16}       1.0{:>10}{:>16}       0.0{:>19}                0.0{:>19}{:20.3f}{:20.3f}{:>12}\n'.format('xPET_CORRECTION','xHBV_BETA','xFIELD_CAPACITY','xMAX_CAP_RISE_RATE','xSTORAGE_THRESHOLD',par.INTERFLOW_COEFF,par.INTERFLOW_COEFF,par.BASEFLOW_N))
+                    f.write('  TOP                             _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT           _DEFAULT           _DEFAULT            _DEFAULT            _DEFAULT    _DEFAULT\n')
+                    f.write('  Urban                           _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT           _DEFAULT           _DEFAULT            _DEFAULT            xbfUrban xBASEFLOW_N\n') 
                     for s in dsg: 
                         if s=='LAKE':continue
+                        if s=='Urban':continue
                         stpl = s
                         if stpl[:3]=="Low" and len(stpl)>3: stpl=stpl.replace("Low","L")
                         if stpl[:6]=="Medium" and len(stpl)>6: stpl=stpl.replace("Medium","M")
-                        f.write('  {0:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT{1:15.3f}           _DEFAULT{2:>20}{2:>20}    _DEFAULT\n'.format(s,sxgrDay[s],'xk'+stpl))                    
+                        # f.write('  {0:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT{1:19.3f}           _DEFAULT{2:>20}{2:>20}    _DEFAULT\n'.format(s,sxgrDay[s],'xbf'+stpl))
+                        f.write('  {0:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT{1:>19}           _DEFAULT{2:>20}{2:>20}    _DEFAULT  # xLogMAX_PERC_RATE_MULT\n'.format(s,'xk'+stpl,'xbf'+stpl))
                     if len(wshd.zon)>0:
                         grps = [int(i) for i in list(set(wshd.zon.values()))]
                         grps.sort()
                         for g in grps:
-                            f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT           _DEFAULT            _DEFAULT{:>20}    _DEFAULT\n'.format('SLOW'+'{:03d}'.format(g),'xbf'+'{:03d}'.format(g)))
+                            f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT           _DEFAULT           _DEFAULT            _DEFAULT{:>20}    _DEFAULT\n'.format('SLOW'+'{:03d}'.format(g),'xbf'+'{:03d}'.format(g)))
                     else:
                         for s in dsg: 
                             if s=='LAKE':continue
+                            if s=='Urban':continue
                             # stpl = s
                             # if stpl[:3]=="Low" and len(stpl)>3: stpl=stpl.replace("Low","L")
                             # if stpl[:6]=="Medium" and len(stpl)>6: stpl=stpl.replace("Medium","M")
                             # f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT            _DEFAULT    _DEFAULT\n'.format(s + 'TOP '))
-                            f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT{:15.3f}            _DEFAULT    _DEFAULT    _DEFAULT    _DEFAULT\n'.format(s,sxgrDay[s]))
+                            f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT{:19.3f}            _DEFAULT    _DEFAULT    _DEFAULT    _DEFAULT\n'.format(s,sxgrDay[s]))
                             # f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT{:>20}    _DEFAULT\n'.format(s + 'SLOW','xbf'+stpl))
-                        f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT{:>20}    _DEFAULT    _DEFAULT    _DEFAULT\n'.format('SLOW','xbflw'))
+                        f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT           _DEFAULT{:>20}    _DEFAULT    _DEFAULT    _DEFAULT\n'.format('SLOW','xbflw'))
                 else:
-                    f.write('  [DEFAULT]               {:>16}{:>10}{:>10}{:>16}{:>10}{:>19}{:>15}{:>19}{:20.3f}{:20.3f}{:12.3f}\n'.format(par.PET_CORRECTION,1.0,par.HBV_BETA,par.FIELD_CAPACITY,0.0,par.MAX_CAP_RISE_RATE,0.0,par.STORAGE_THRESHOLD,par.INTERFLOW_COEFF,par.INTERFLOW_COEFF,par.BASEFLOW_N))
+                    f.write('  [DEFAULT]               {:>16}{:>10}{:>10}{:>16}{:>10}{:>19}{:>19}{:>19}{:20.3f}{:20.3f}{:12.3f}\n'.format(par.PET_CORRECTION,1.0,par.HBV_BETA,par.FIELD_CAPACITY,0.0,par.MAX_CAP_RISE_RATE,0.0,par.STORAGE_THRESHOLD,par.INTERFLOW_COEFF,par.INTERFLOW_COEFF,par.BASEFLOW_N))
 
                     # f.write('  FAST             _DEFAULT      0.43244       _DEFAULT            0.0       _DEFAULT          _DEFAULT          1.446       0.034432         1.9631\n')
                     # f.write('  SLOW             _DEFAULT     _DEFAULT       _DEFAULT            0.0       _DEFAULT          _DEFAULT       _DEFAULT       0.044002            1.0\n')
                     # f.write('  TOP              _DEFAULT     _DEFAULT       _DEFAULT            0.0       _DEFAULT          _DEFAULT            0.0       _DEFAULT       _DEFAULT\n')
-                    f.write('  TOP                             _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT           _DEFAULT            _DEFAULT            _DEFAULT    _DEFAULT\n') 
+                    f.write('  TOP                             _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT           _DEFAULT           _DEFAULT            _DEFAULT            _DEFAULT    _DEFAULT\n') 
+                    f.write('  Urban                           _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT           _DEFAULT           _DEFAULT            _DEFAULT            _DEFAULT    _DEFAULT\n')                     
                     for s in dsg: 
                         if s=='LAKE':continue
+                        if s=='Urban':continue
                         # f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT            _DEFAULT    _DEFAULT\n'.format(s + 'TOP ')) 
-                        f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT{:15.3f}           _DEFAULT            _DEFAULT            _DEFAULT    _DEFAULT\n'.format(s,sxgrDay[s])) 
+                        f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT{:19.3f}           _DEFAULT            _DEFAULT            _DEFAULT    _DEFAULT\n'.format(s,sxgrDay[s])) 
                         # f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT{:20.3f}    _DEFAULT\n'.format(s + 'SLOW',par.BASEFLOW_COEFF))        
                     if len(wshd.zon)>0:
                         grps = [int(i) for i in list(set(wshd.zon.values()))]
                         grps.sort()
                         for g in grps: 
-                            f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT           _DEFAULT            _DEFAULT{:20.3f}    _DEFAULT\n'.format('SLOW'+'{:03d}'.format(g),par.BASEFLOW_COEFF))
+                            f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT           _DEFAULT           _DEFAULT            _DEFAULT{:20.3f}    _DEFAULT\n'.format('SLOW'+'{:03d}'.format(g),par.BASEFLOW_COEFF))
                     else:
-                        f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT       _DEFAULT           _DEFAULT            _DEFAULT{:20.3f}    _DEFAULT\n'.format('SLOW',par.BASEFLOW_COEFF))
+                        f.write('  {:25}       _DEFAULT  _DEFAULT  _DEFAULT        _DEFAULT  _DEFAULT           _DEFAULT           _DEFAULT           _DEFAULT            _DEFAULT{:20.3f}    _DEFAULT\n'.format('SLOW',par.BASEFLOW_COEFF))
                 f.write(':EndSoilParameterList\n\n')
 
     write_rvp(root + nam + ".rvp", False)
